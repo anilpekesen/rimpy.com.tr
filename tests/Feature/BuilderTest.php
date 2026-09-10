@@ -217,4 +217,95 @@ class BuilderTest extends TestCase
 
         $this->get('/')->assertOk()->assertSee('--c-primary: #e11d48', false);
     }
+
+    // ── Tekrarlayan listeler ─────────────────────────────────────────────
+
+    /** Seçili widget'ı hazırlar ve kimliğini döndürür. */
+    private function addWidgetTo(&$component, string $key): string
+    {
+        $component->call('addSection', [100]);
+        $columnId = $component->get('tree')[0]['elements'][0]['id'];
+        $component->call('selectElement', $columnId)->call('addWidget', $key);
+
+        $sections = $component->get('tree');
+        $widgetId = end($sections)['elements'][0]['elements'][0]['id'];
+
+        $component->call('selectElement', $widgetId);
+
+        return $widgetId;
+    }
+
+    private function rowsOf($component, string $widgetId, string $key): array
+    {
+        foreach (\App\Builder\Tree::fromArray(['elements' => $component->get('tree')])->flatten() as $element) {
+            if ($element->id === $widgetId) {
+                return $element->setting($key, []);
+            }
+        }
+
+        return [];
+    }
+
+    public function test_listeye_satir_eklenip_cikarilabilir(): void
+    {
+        $component = Livewire::actingAs($this->owner)->test(Editor::class, ['page' => $this->page]);
+        $widgetId = $this->addWidgetTo($component, 'accordion');
+
+        $baslangic = count($this->rowsOf($component, $widgetId, 'items'));
+        $this->assertGreaterThan(0, $baslangic, 'Yeni SSS örnek satırlarla gelmeliydi.');
+
+        $component->call('addRepeaterRow', 'items');
+        $this->assertCount($baslangic + 1, $this->rowsOf($component, $widgetId, 'items'));
+
+        $component->call('removeRepeaterRow', 'items', 0);
+        $this->assertCount($baslangic, $this->rowsOf($component, $widgetId, 'items'));
+    }
+
+    public function test_liste_satirlari_siralanabilir(): void
+    {
+        $component = Livewire::actingAs($this->owner)->test(Editor::class, ['page' => $this->page]);
+        $widgetId = $this->addWidgetTo($component, 'accordion');
+
+        $component->call('setRepeaterField', 'items', 0, 'title', 'Birinci')
+            ->call('setRepeaterField', 'items', 1, 'title', 'İkinci')
+            ->call('moveRepeaterRow', 'items', 0, 'down');
+
+        $rows = $this->rowsOf($component, $widgetId, 'items');
+
+        $this->assertSame('İkinci', $rows[0]['title']);
+        $this->assertSame('Birinci', $rows[1]['title']);
+    }
+
+    public function test_gecersiz_satir_islemleri_agaci_bozmuyor(): void
+    {
+        $component = Livewire::actingAs($this->owner)->test(Editor::class, ['page' => $this->page]);
+        $widgetId = $this->addWidgetTo($component, 'accordion');
+
+        $once = $this->rowsOf($component, $widgetId, 'items');
+
+        // Olmayan satır, sınır dışına taşıma, tanımsız liste
+        $component->call('removeRepeaterRow', 'items', 99)
+            ->call('moveRepeaterRow', 'items', 0, 'up')
+            ->call('setRepeaterField', 'items', 99, 'title', 'x')
+            ->call('addRepeaterRow', 'olmayan_liste');
+
+        $this->assertSame($once, $this->rowsOf($component, $widgetId, 'items'));
+    }
+
+    public function test_liste_icerigi_on_yuzde_gorunuyor(): void
+    {
+        $component = Livewire::actingAs($this->owner)->test(Editor::class, ['page' => $this->page]);
+        $this->addWidgetTo($component, 'accordion');
+
+        $component->call('setRepeaterField', 'items', 0, 'title', 'Teslimat ne kadar sürer?')
+            ->call('setRepeaterField', 'items', 0, 'body', '<p>Ortalama üç iş günü.</p>')
+            ->call('save');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Teslimat ne kadar sürer?')
+            ->assertSee('Ortalama üç iş günü.', false)
+            // SSS yapısal verisi arama motorları için basılmalı.
+            ->assertSee('FAQPage', false);
+    }
 }

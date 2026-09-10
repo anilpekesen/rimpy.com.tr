@@ -17,6 +17,27 @@
 <body class="h-full overflow-hidden bg-ink-200">
     <?php echo e($slot); ?>
 
+    <?php
+$__split = function ($name, $params = []) {
+    return [$name, $params];
+};
+[$__name, $__params] = $__split('media-picker', []);
+
+$__key = null;
+
+$__key ??= \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::generateKey('lw-1630314938-0', $__key);
+
+$__html = app('livewire')->mount($__name, $__params, $__key);
+
+echo $__html;
+
+unset($__html);
+unset($__key);
+unset($__name);
+unset($__params);
+unset($__split);
+if (isset($__slots)) unset($__slots);
+?>
     <?php echo \Livewire\Mechanisms\FrontendAssets\FrontendAssets::scripts(); ?>
 
 </body>

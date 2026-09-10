@@ -14,14 +14,16 @@
 </div>
 
 @if (($settings['schema'] ?? true) && $items && ! $context->editing)
-    {{-- Arama motorlarının soruları doğrudan sonuçlarda gösterebilmesi için --}}
-    <script type="application/ld+json">@json([
-        '@context' => 'https://schema.org',
-        '@type' => 'FAQPage',
-        'mainEntity' => collect($items)->map(fn ($i) => [
-            '@type' => 'Question',
-            'name' => strip_tags((string) ($i['title'] ?? '')),
-            'acceptedAnswer' => ['@type' => 'Answer', 'text' => strip_tags((string) ($i['body'] ?? ''))],
-        ])->values(),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)</script>
+    @php
+        /**
+         * Arama motorlarının soruları doğrudan sonuçlarda gösterebilmesi için.
+         *
+         * Yapı burada kuruluyor, şablonda değil: Schema.org anahtarları "@"
+         * ile başladığı için Blade onları kendi yönergesi sanıyor ve
+         * şablon içinde yazıldıklarında derleme hatası veriyor.
+         */
+        $faqSchema = \App\Support\Schema::faq($items);
+    @endphp
+
+    <script type="application/ld+json">{!! \App\Support\Schema::encode($faqSchema) !!}</script>
 @endif

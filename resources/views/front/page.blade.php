@@ -27,10 +27,20 @@
         {!! app(\App\Builder\Renderer::class)->render($tree, $context) !!}
     @endif
 
-    @if ($page->is_home || $page->parent_id)
-        <script type="application/ld+json">@json(
-            \App\Support\Breadcrumbs::schema(\App\Support\Breadcrumbs::for($page, $locale)),
-            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-        )</script>
-    @endif
+    @php
+        // Yapısal veri PHP tarafında kurulur; Schema.org anahtarları "@" ile
+        // başladığı için Blade içinde yazılamaz.
+        $structured = array_filter([
+            $page->parent_id
+                ? \App\Support\Schema::breadcrumbs(\App\Support\Breadcrumbs::for($page, $locale))
+                : [],
+            $page->is_home ? \App\Support\Schema::organization($locale) : [],
+        ]);
+    @endphp
+
+    @foreach ($structured as $block)
+        @if ($json = \App\Support\Schema::encode($block))
+            <script type="application/ld+json">{!! $json !!}</script>
+        @endif
+    @endforeach
 </x-site-layout>

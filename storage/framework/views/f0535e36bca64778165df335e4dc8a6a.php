@@ -30,10 +30,22 @@
 
     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($page->is_home || $page->parent_id): ?>
-        <script type="application/ld+json"><?php echo json_encode(
-            \App\Support\Breadcrumbs::schema(\App\Support\Breadcrumbs::for($page, $locale)), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
-    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    <?php
+        // Yapısal veri PHP tarafında kurulur; Schema.org anahtarları "@" ile
+        // başladığı için Blade içinde yazılamaz.
+        $structured = array_filter([
+            $page->parent_id
+                ? \App\Support\Schema::breadcrumbs(\App\Support\Breadcrumbs::for($page, $locale))
+                : [],
+            $page->is_home ? \App\Support\Schema::organization($locale) : [],
+        ]);
+    ?>
+
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $structured; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $block): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($json = \App\Support\Schema::encode($block)): ?>
+            <script type="application/ld+json"><?php echo $json; ?></script>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginald956570c5321d7185b887a45463f814f)): ?>

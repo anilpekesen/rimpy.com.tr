@@ -15,6 +15,7 @@
 </head>
 <body class="h-full overflow-hidden bg-ink-200">
     {{ $slot }}
+    <livewire:media-picker />
     @livewireScripts
 </body>
 </html>

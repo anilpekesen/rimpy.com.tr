@@ -57,18 +57,14 @@ class Breadcrumbs
         return $trail;
     }
 
-    /** Arama motorlarının okuduğu yapısal veri. */
+    /**
+     * Arama motorlarının okuduğu yapısal veri.
+     *
+     * @deprecated Schema::breadcrumbs() kullanın; tüm yapısal veri tek
+     *   yerde toplandı.
+     */
     public static function schema(array $trail): array
     {
-        return [
-            '@context' => 'https://schema.org',
-            '@type' => 'BreadcrumbList',
-            'itemListElement' => collect($trail)->values()->map(fn ($crumb, $index) => array_filter([
-                '@type' => 'ListItem',
-                'position' => $index + 1,
-                'name' => $crumb['label'],
-                'item' => $crumb['url'] ? url($crumb['url']) : null,
-            ]))->all(),
-        ];
+        return Schema::breadcrumbs($trail);
     }
 }

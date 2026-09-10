@@ -85,8 +85,11 @@
         </article>
     @endif
 
-    <script type="application/ld+json">@json(
-        \App\Support\Breadcrumbs::schema(\App\Support\Breadcrumbs::for($item, $locale)),
-        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-    )</script>
+    @php
+        $crumbs = \App\Support\Schema::breadcrumbs(\App\Support\Breadcrumbs::for($item, $locale));
+    @endphp
+
+    @if ($json = \App\Support\Schema::encode($crumbs))
+        <script type="application/ld+json">{!! $json !!}</script>
+    @endif
 </x-site-layout>

@@ -367,6 +367,121 @@ class Editor extends Component
         return $value[$this->device] ?? $value['d'] ?? $default;
     }
 
+    // ── Tekrarlayan listeler ─────────────────────────────────────────────
+    //
+    // Slayt, SSS maddesi, ekip üyesi gibi listeler burada yönetilir.
+    // İşlemler bilinçli olarak sunucu tarafında: alternatifi, her düğmeye
+    // listenin tamamının bir kopyasını gömmekti ve sayfa satır sayısının
+    // karesiyle büyüyordu.
+
+    /** Listenin geçerli hâlini döndürür. */
+    private function repeaterRows(string $key): array
+    {
+        $element = $this->selectedId ? TreeEditor::find($this->tree, $this->selectedId) : null;
+        $rows = $element['settings'][$key] ?? null;
+
+        return is_array($rows) ? array_values($rows) : [];
+    }
+
+    private function writeRepeater(string $key, array $rows, ?string $coalesceKey = null): void
+    {
+        if (! $this->selectedId) {
+            return;
+        }
+
+        $element = TreeEditor::find($this->tree, $this->selectedId);
+
+        if ($element === null) {
+            return;
+        }
+
+        $this->pushHistory($coalesceKey);
+
+        $settings = $element['settings'] ?? [];
+        $settings[$key] = array_values($rows);
+
+        $this->tree = TreeEditor::updateSettings($this->tree, $this->selectedId, $settings);
+    }
+
+    /** Listeye, tanımdaki varsayılanlarla dolu yeni bir satır ekler. */
+    public function addRepeaterRow(string $key): void
+    {
+        $control = $this->controlDefinition($key);
+
+        if ($control === null) {
+            return;
+        }
+
+        $blank = [];
+
+        foreach ($control['fields'] ?? [] as $fieldKey => $field) {
+            $blank[$fieldKey] = $field['default'] ?? '';
+        }
+
+        $this->writeRepeater($key, [...$this->repeaterRows($key), $blank]);
+    }
+
+    public function removeRepeaterRow(string $key, int $index): void
+    {
+        $rows = $this->repeaterRows($key);
+
+        if (! array_key_exists($index, $rows)) {
+            return;
+        }
+
+        unset($rows[$index]);
+        $this->writeRepeater($key, $rows);
+    }
+
+    public function moveRepeaterRow(string $key, int $index, string $direction): void
+    {
+        $rows = $this->repeaterRows($key);
+        $target = $direction === 'up' ? $index - 1 : $index + 1;
+
+        if (! isset($rows[$index], $rows[$target])) {
+            return;
+        }
+
+        [$rows[$index], $rows[$target]] = [$rows[$target], $rows[$index]];
+
+        $this->writeRepeater($key, $rows);
+    }
+
+    /** Bir satırdaki tek alanı günceller. */
+    public function setRepeaterField(string $key, int $index, string $field, mixed $value): void
+    {
+        $rows = $this->repeaterRows($key);
+
+        if (! array_key_exists($index, $rows)) {
+            return;
+        }
+
+        $rows[$index][$field] = $value;
+
+        // Aynı alanda art arda yazılan harfler tek geri alma adımı sayılır.
+        $this->writeRepeater($key, $rows, "{$this->selectedId}:{$key}:{$index}:{$field}");
+    }
+
+    /** Seçili elemanın denetim tanımını anahtarına göre bulur. */
+    private function controlDefinition(string $key): ?array
+    {
+        $element = $this->selectedId ? TreeEditor::find($this->tree, $this->selectedId) : null;
+
+        if ($element === null) {
+            return null;
+        }
+
+        $controls = $this->controlsFor($element, app(WidgetRegistry::class));
+
+        foreach ($controls as $tab) {
+            if (isset($tab['controls'][$key])) {
+                return $tab['controls'][$key];
+            }
+        }
+
+        return null;
+    }
+
     // ── Kaydetme ─────────────────────────────────────────────────────────
 
     public function save(): void
