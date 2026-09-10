@@ -75,6 +75,7 @@
         </template>
 
         <button type="button" @click="$dispatch('open-media-picker', { target: '{{ $key }}.url', mode: 'url' })"
+                @media-applied.stop="v.url = $event.detail.url; push()"
                 class="btn-secondary btn-sm w-full">
             <x-icon name="image" class="size-3.5"/> <span x-text="v.url ? 'Görseli değiştir' : 'Görsel seç'"></span>
         </button>

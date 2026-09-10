@@ -57,7 +57,8 @@ $write = "\$wire.setRepeaterField('".e($repeaterKey)."', {$rowIndex}, '".e($fiel
                         @click="$dispatch('open-media-picker', {
                             repeater: <?php echo \Illuminate\Support\Js::from($repeaterKey)->toHtml() ?>, row: <?php echo e($rowIndex); ?>,
                             field: <?php echo \Illuminate\Support\Js::from($fieldKey)->toHtml() ?>, accept: 'image'
-                        })">
+                        })"
+                        @media-applied.stop="<?php echo $write; ?>$event.detail.mediaId)">
                     <?php echo e($rowMedia ? 'Değiştir' : 'Görsel seç'); ?>
 
                 </button>

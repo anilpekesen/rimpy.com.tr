@@ -17,12 +17,31 @@ class RenderContext
     /** @var Collection<int, Media> */
     private Collection $mediaCache;
 
+    /** @var array<string, true> Sayfa başına bir kez basılacak parçalar. */
+    private array $claimed = [];
+
     public function __construct(
         public string $locale,
         public bool $editing = false,
         public mixed $subject = null,
     ) {
         $this->mediaCache = collect();
+    }
+
+    /**
+     * Sayfada yalnızca bir kez basılması gereken bir şeyi ilk isteyene verir.
+     *
+     * İki SSS bölümü olan bir sayfa iki ayrı "FAQPage" bildirimi basarsa
+     * Google ikisini de yok sayar. Aynı durum kurumsal kimlik bildirimi için
+     * de geçerlidir.
+     */
+    public function claimOnce(string $key): bool
+    {
+        if (isset($this->claimed[$key])) {
+            return false;
+        }
+
+        return $this->claimed[$key] = true;
     }
 
     /** Ağaçtaki tüm medya kimliklerini tek sorguda önden yükler. */

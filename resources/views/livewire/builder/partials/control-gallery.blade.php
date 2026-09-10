@@ -24,6 +24,7 @@
     @endif
 
     <button type="button" x-on:click="$dispatch('open-media-picker', { target: '{{ $key }}', multiple: true, existing: @js($ids) })"
+            x-on:media-applied.stop="$wire.setSetting('{{ $key }}', [...new Set([...@js($ids), ...$event.detail.mediaIds])], false)"
             class="btn-secondary btn-sm w-full">
         <x-icon name="image" class="size-3.5"/> {{ $ids ? 'Görsel ekle' : 'Görselleri seç' }}
     </button>

@@ -224,11 +224,17 @@ class BuilderTest extends TestCase
     private function addWidgetTo(&$component, string $key): string
     {
         $component->call('addSection', [100]);
-        $columnId = $component->get('tree')[0]['elements'][0]['id'];
+
+        // Her zaman en son eklenen bölümün sütununa yerleştir; birden çok
+        // bölüm eklendiğinde ilk bölüme geri dönmemek için.
+        $sections = $component->get('tree');
+        $columnId = end($sections)['elements'][0]['id'];
+
         $component->call('selectElement', $columnId)->call('addWidget', $key);
 
         $sections = $component->get('tree');
-        $widgetId = end($sections)['elements'][0]['elements'][0]['id'];
+        $column = end($sections)['elements'][0];
+        $widgetId = end($column['elements'])['id'];
 
         $component->call('selectElement', $widgetId);
 
@@ -307,5 +313,26 @@ class BuilderTest extends TestCase
             ->assertSee('Ortalama üç iş günü.', false)
             // SSS yapısal verisi arama motorları için basılmalı.
             ->assertSee('FAQPage', false);
+    }
+
+    public function test_sayfada_yalnizca_bir_sss_bildirimi_basilir(): void
+    {
+        $component = Livewire::actingAs($this->owner)->test(Editor::class, ['page' => $this->page]);
+
+        // Aynı sayfaya iki SSS bölümü koy.
+        $this->addWidgetTo($component, 'accordion');
+        $this->addWidgetTo($component, 'accordion');
+
+        $component->call('save');
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        // Google sayfa başına tek bir FAQPage bekler; ikisi de basılırsa
+        // hiçbirini dikkate almaz.
+        $this->assertSame(
+            1,
+            substr_count($html, '"@type":"FAQPage"'),
+            'Sayfada birden fazla SSS bildirimi basıldı.'
+        );
     }
 }

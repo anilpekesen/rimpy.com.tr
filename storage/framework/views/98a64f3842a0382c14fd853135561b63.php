@@ -76,6 +76,7 @@
         </template>
 
         <button type="button" @click="$dispatch('open-media-picker', { target: '<?php echo e($key); ?>.url', mode: 'url' })"
+                @media-applied.stop="v.url = $event.detail.url; push()"
                 class="btn-secondary btn-sm w-full">
             <?php if (isset($component)) { $__componentOriginalce262628e3a8d44dc38fd1f3965181bc = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalce262628e3a8d44dc38fd1f3965181bc = $attributes; } ?>

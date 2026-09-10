@@ -56,7 +56,8 @@ $write = "\$wire.setRepeaterField('".e($repeaterKey)."', {$rowIndex}, '".e($fiel
                         @click="$dispatch('open-media-picker', {
                             repeater: @js($repeaterKey), row: {{ $rowIndex }},
                             field: @js($fieldKey), accept: 'image'
-                        })">
+                        })"
+                        @media-applied.stop="{!! $write !!}$event.detail.mediaId)">
                     {{ $rowMedia ? 'Değiştir' : 'Görsel seç' }}
                 </button>
                 @if ($rowMedia)

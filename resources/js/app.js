@@ -9,6 +9,56 @@ import Sortable from 'sortablejs';
 
 window.Sortable = Sortable;
 
+function collectMenuPositions(root) {
+    const positions = [];
+
+    root.querySelectorAll('[data-menu-sortable]').forEach((list) => {
+        const parentId = list.dataset.parentId ? Number(list.dataset.parentId) : null;
+        const directItems = Array.from(list.children).filter((child) => child.matches('[data-menu-item]'));
+
+        directItems.forEach((item, sort) => positions.push({
+            id: Number(item.dataset.menuItem),
+            parent_id: parentId,
+            sort,
+        }));
+    });
+
+    return positions;
+}
+
+window.initMenuSortables = (scope = document) => {
+    scope.querySelectorAll('[data-menu-sortable]').forEach((list) => {
+        if (list._mimarSortable) return;
+
+        const root = list.closest('[data-menu-builder]');
+        if (!root) return;
+
+        list._mimarSortable = Sortable.create(list, {
+            group: 'mimar-menu-tree',
+            animation: 180,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            handle: '[data-menu-handle]',
+            draggable: ':scope > [data-menu-item]',
+            fallbackOnBody: true,
+            swapThreshold: 0.65,
+            ghostClass: 'menu-item-ghost',
+            chosenClass: 'menu-item-chosen',
+            dragClass: 'menu-item-dragging',
+            onEnd() {
+                const componentRoot = root.closest('[wire\\:id]');
+                const component = componentRoot && window.Livewire?.find(componentRoot.getAttribute('wire:id'));
+                component?.call('reorderItems', collectMenuPositions(root));
+            },
+        });
+    });
+};
+
+document.addEventListener('DOMContentLoaded', () => window.initMenuSortables());
+document.addEventListener('livewire:navigated', () => window.initMenuSortables());
+document.addEventListener('livewire:init', () => {
+    window.Livewire.hook('morph.updated', ({ el }) => window.initMenuSortables(el));
+});
+
 // Ortak medya seçici ayrı bir Livewire bileşenidir. Seçim tamamlandığında
 // sonucu, seçiciyi açan gerçek denetime geri yollarız; böylece her ekran
 // kendi alanını nasıl güncelleyeceğine kendisi karar verir.

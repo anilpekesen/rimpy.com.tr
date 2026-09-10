@@ -162,7 +162,8 @@
                             class="btn-ghost btn-sm w-full text-red-600">Kaldır</button>
                 @else
                     <button type="button" class="btn-secondary btn-sm w-full"
-                            @click="$dispatch('open-media-picker', { target: 'form.featured_image_id' })">
+                            @click="$dispatch('open-media-picker', { target: 'form.featured_image_id' })"
+                            @media-applied.stop="$wire.set('form.featured_image_id', $event.detail.mediaId)">
                         <x-icon name="image" class="size-3.5"/> Görsel seç
                     </button>
                 @endif

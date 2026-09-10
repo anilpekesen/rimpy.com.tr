@@ -57,7 +57,8 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                     <button type="button" wire:click="$set('seo.og_image_id', null)" class="btn-ghost btn-sm text-red-600">Kaldır</button>
                 <?php else: ?>
                     <button type="button" class="btn-secondary btn-sm"
-                            @click="$dispatch('open-media-picker', { target: 'seo.og_image_id' })">Görsel seç</button>
+                            @click="$dispatch('open-media-picker', { target: 'seo.og_image_id' })"
+                            @media-applied.stop="$wire.set('seo.og_image_id', $event.detail.mediaId)">Görsel seç</button>
                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </div>
             <p class="hint">Site bağlantısı WhatsApp ya da LinkedIn'de paylaşıldığında görünen görsel. 1200×630 piksel önerilir.</p>

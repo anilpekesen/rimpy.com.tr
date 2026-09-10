@@ -237,7 +237,8 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                             class="btn-ghost btn-sm w-full text-red-600">Kaldır</button>
                 <?php else: ?>
                     <button type="button" class="btn-secondary btn-sm w-full"
-                            @click="$dispatch('open-media-picker', { target: 'form.featured_image_id' })">
+                            @click="$dispatch('open-media-picker', { target: 'form.featured_image_id' })"
+                            @media-applied.stop="$wire.set('form.featured_image_id', $event.detail.mediaId)">
                         <?php if (isset($component)) { $__componentOriginalce262628e3a8d44dc38fd1f3965181bc = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalce262628e3a8d44dc38fd1f3965181bc = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.icon','data' => ['name' => 'image','class' => 'size-3.5']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>

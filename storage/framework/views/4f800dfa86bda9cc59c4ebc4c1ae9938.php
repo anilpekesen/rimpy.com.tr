@@ -53,7 +53,8 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                                     class="btn-ghost btn-sm w-full text-red-600">Kaldır</button>
                         <?php else: ?>
                             <button type="button" class="btn-secondary btn-sm w-full"
-                                    @click="$dispatch('open-media-picker', { target: 'general.<?php echo e($field); ?>' })">
+                                    @click="$dispatch('open-media-picker', { target: 'general.<?php echo e($field); ?>' })"
+                                    @media-applied.stop="$wire.set('general.<?php echo e($field); ?>', $event.detail.mediaId)">
                                 Seç
                             </button>
                         <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>

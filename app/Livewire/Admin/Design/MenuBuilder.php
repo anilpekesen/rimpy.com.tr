@@ -9,6 +9,7 @@ use App\Models\MenuItem;
 use App\Models\Page;
 use App\Services\ActivityLogger;
 use App\Support\Locales;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -168,6 +169,76 @@ class MenuBuilder extends Component
         [$item->sort, $neighbour->sort] = [$neighbour->sort, $item->sort];
         $item->save();
         $neighbour->save();
+    }
+
+    /** Sürükle-bırak sonrasında bütün ağacın sırasını tek işlemde kaydeder. */
+    public function reorderItems(array $positions): void
+    {
+        if (! $this->menuId) {
+            return;
+        }
+
+        $menu = Menu::with('items')->findOrFail($this->menuId);
+        $validIds = $menu->items->pluck('id')->map(fn ($id) => (int) $id)->sort()->values()->all();
+        $receivedIds = collect($positions)->pluck('id')->map(fn ($id) => (int) $id)->sort()->values()->all();
+
+        // Eksik/fazla kimlik içeren istemci verisini asla kısmen uygulama.
+        if ($receivedIds !== $validIds) {
+            $this->dispatch('notify', message: 'Menü sırası kaydedilemedi. Sayfayı yenileyip tekrar deneyin.');
+
+            return;
+        }
+
+        $parents = [];
+
+        foreach ($positions as $position) {
+            $id = (int) ($position['id'] ?? 0);
+            $parentId = filled($position['parent_id'] ?? null) ? (int) $position['parent_id'] : null;
+
+            if ($parentId !== null && (! in_array($parentId, $validIds, true) || $parentId === $id)) {
+                $this->dispatch('notify', message: 'Bir menü öğesi kendi altına taşınamaz.');
+
+                return;
+            }
+
+            $parents[$id] = $parentId;
+        }
+
+        // Döngüleri ve kurumsal menülerde kullanılabilirliği bozan aşırı derinliği engelle.
+        foreach ($validIds as $id) {
+            $seen = [$id];
+            $cursor = $parents[$id] ?? null;
+            $depth = 0;
+
+            while ($cursor !== null) {
+                if (in_array($cursor, $seen, true)) {
+                    $this->dispatch('notify', message: 'Bir menü öğesi kendi alt öğesinin altına taşınamaz.');
+
+                    return;
+                }
+
+                $seen[] = $cursor;
+                $cursor = $parents[$cursor] ?? null;
+
+                if (++$depth > 3) {
+                    $this->dispatch('notify', message: 'Menü en fazla üç alt seviyeden oluşabilir.');
+
+                    return;
+                }
+            }
+        }
+
+        DB::transaction(function () use ($positions, $menu): void {
+            foreach ($positions as $position) {
+                $menu->items->firstWhere('id', (int) $position['id'])?->update([
+                    'parent_id' => filled($position['parent_id'] ?? null) ? (int) $position['parent_id'] : null,
+                    'sort' => max(0, (int) ($position['sort'] ?? 0)),
+                ]);
+            }
+        });
+
+        ActivityLogger::updated($menu, "Menü sıralandı: {$menu->name}");
+        $this->dispatch('notify', message: 'Menü sırası kaydedildi.');
     }
 
     public function deleteItem(int $id): void

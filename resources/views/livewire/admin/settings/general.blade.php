@@ -39,7 +39,8 @@
                                     class="btn-ghost btn-sm w-full text-red-600">Kaldır</button>
                         @else
                             <button type="button" class="btn-secondary btn-sm w-full"
-                                    @click="$dispatch('open-media-picker', { target: 'general.{{ $field }}' })">
+                                    @click="$dispatch('open-media-picker', { target: 'general.{{ $field }}' })"
+                                    @media-applied.stop="$wire.set('general.{{ $field }}', $event.detail.mediaId)">
                                 Seç
                             </button>
                         @endif

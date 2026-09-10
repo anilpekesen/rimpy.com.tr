@@ -44,6 +44,7 @@
     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
     <button type="button" x-on:click="$dispatch('open-media-picker', { target: '<?php echo e($key); ?>', accept: '<?php echo e($control['accept'] ?? 'image'); ?>' })"
+            x-on:media-applied.stop="$wire.setSetting('<?php echo e($key); ?>', $event.detail.mediaId, false)"
             class="btn-secondary btn-sm w-full">
         <?php if (isset($component)) { $__componentOriginalce262628e3a8d44dc38fd1f3965181bc = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalce262628e3a8d44dc38fd1f3965181bc = $attributes; } ?>

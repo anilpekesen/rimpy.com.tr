@@ -56,7 +56,8 @@
 
     <template x-if="v.type === 'file'">
         <button type="button" class="btn-secondary btn-sm w-full"
-                @click="$dispatch('open-media-picker', { target: '<?php echo e($key); ?>.id', accept: 'document' })">
+                @click="$dispatch('open-media-picker', { target: '<?php echo e($key); ?>.id', accept: 'document' })"
+                @media-applied.stop="v.id = $event.detail.mediaId; push()">
             Dosya seç
         </button>
     </template>

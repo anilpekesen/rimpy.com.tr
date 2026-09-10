@@ -13,7 +13,7 @@
     @endforeach
 </div>
 
-@if (($settings['schema'] ?? true) && $items && ! $context->editing)
+@if (($settings['schema'] ?? true) && $items && ! $context->editing && $context->claimOnce('faq'))
     @php
         /**
          * Arama motorlarının soruları doğrudan sonuçlarda gösterebilmesi için.
