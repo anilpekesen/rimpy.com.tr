@@ -61,7 +61,7 @@ class MenuItem extends Model
                 ? $prefix.$item->path($locale)
                 : null,
             'term' => ($term = Term::with('translations', 'taxonomy.contentType')->find($this->target_id))
-                ? $prefix.'/'.$term->taxonomy->contentType->prefix($locale).'/'.$term->taxonomy->key.'/'.$term->t('slug', $locale)
+                ? $prefix.'/'.$term->taxonomy->contentType->prefix($locale).'/'.$term->taxonomy->prefix($locale).'/'.$term->t('slug', $locale)
                 : null,
             'archive' => ($type = ContentType::find($this->target_id))
                 ? $prefix.'/'.$type->prefix($locale)

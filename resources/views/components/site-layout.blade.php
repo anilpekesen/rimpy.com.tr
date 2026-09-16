@@ -6,6 +6,10 @@
     'noindex' => false,
     'ogImageId' => null,
     'canonical' => null,
+    // Kurucunun önizleme çerçevesi: istatistik betiği basılmaz.
+    'preview' => false,
+    // false: üst başlık ve alt bilgi çizilmez (şablon düzenlenirken).
+    'chrome' => true,
 ])
 
 @php
@@ -16,6 +20,7 @@
 
     $header = \App\Models\Template::where('type', 'header')->where('is_default', true)->first();
     $footer = \App\Models\Template::where('type', 'footer')->where('is_default', true)->first();
+    $isHome = $subject instanceof \App\Models\Page && $subject->is_home;
 
     $context = new \App\Builder\RenderContext($locale, subject: $subject ?? null);
     $renderer = app(\App\Builder\Renderer::class);
@@ -68,6 +73,11 @@
     {{-- Tema jetonları ve bu sayfaya özel derlenmiş stiller --}}
     <style>
         {!! $theme->cssVariables() !!}
+        {{-- Üst başlık ve alt bilgi de kurucuda tasarlandığı için kendi
+             derlenmiş stillerini taşır; sayfanınkiyle birlikte basılmazsa
+             her sayfada biçimsiz görünürler. --}}
+        {!! $header?->compiled_css !!}
+        {!! $footer?->compiled_css !!}
         body{margin:0;background:var(--c-background);color:var(--c-text);font-family:var(--font-body);font-size:var(--text-base);line-height:var(--leading);-webkit-font-smoothing:antialiased}
         h1,h2,h3,h4,h5,h6{font-family:var(--font-heading);color:var(--c-heading);line-height:1.2}
         a{color:inherit}
@@ -78,7 +88,7 @@
     </style>
     @stack('styles')
 
-    @if ($ga = data_get($settings, 'seo.google_analytics'))
+    @if (! $preview && ($ga = data_get($settings, 'seo.google_analytics')))
         <script async src="https://www.googletagmanager.com/gtag/js?id={{ $ga }}"></script>
         <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','{{ $ga }}')</script>
     @endif
@@ -87,16 +97,16 @@
         <meta name="google-site-verification" content="{{ $verification }}">
     @endif
 </head>
-<body>
+<body class="{{ $isHome ? 'page-home' : '' }}">
     <a href="#main" class="skip-link">İçeriğe geç</a>
 
-    @if ($header)
+    @if ($chrome && $header)
         <header>{!! $renderer->template($header, $context) !!}</header>
     @endif
 
     <main id="main">{{ $slot }}</main>
 
-    @if ($footer)
+    @if ($chrome && $footer)
         <footer>{!! $renderer->template($footer, $context) !!}</footer>
     @endif
 

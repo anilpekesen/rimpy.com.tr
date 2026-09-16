@@ -7,6 +7,11 @@
    kullanıcının ayarlarından derlenir.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Ön yüz kendi başına yüklenir (panelin app.css'i burada yoktur), bu yüzden
+   kutu modeli sıfırlaması da burada olmak zorunda. Olmadığında iç boşluğu
+   olan tam genişlikteki her kapsayıcı ekranı yatayda taşırır. */
+*, *::before, *::after { box-sizing: border-box; }
+
 .sec { position: relative; }
 
 .sec > .sec-inner {
@@ -15,7 +20,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
-  gap: 24px;
+  gap: var(--col-gap, 24px);
   margin-inline: auto;
   width: 100%;
 }
@@ -45,14 +50,24 @@
   gap: 20px;
   flex: 0 0 auto;
   min-width: 0;
-  width: calc(var(--w-d, 100%) - var(--col-gap, 0px));
+  width: calc(var(--w-d, 100%) - var(--col-gap, 24px));
 }
+
+/* Tek sütunlu bölümde düşülecek bir aralık yok; tam genişlikte kalmalı. */
+.col:only-child { width: var(--w-d, 100%); }
 
 .col--sticky { position: sticky; top: 24px; align-self: flex-start; }
 
-@media (max-width: 1024px) { .col { width: var(--w-t, var(--w-d, 100%)); } }
+/* Cihaz genişlikleri de aralığı düşer; yoksa toplamı %100 olan iki sütun
+   (mobilde logo + menü düğmesi gibi) aralık kadar taşıp alt alta iner. */
+@media (max-width: 1024px) {
+  .col { width: calc(var(--w-t, var(--w-d, 100%)) - var(--col-gap, 24px)); }
+  .col:only-child { width: var(--w-t, var(--w-d, 100%)); }
+}
+
 @media (max-width: 767px)  {
-  .col { width: var(--w-m, 100%); }
+  .col { width: calc(var(--w-m, 100%) - var(--col-gap, 24px)); }
+  .col:only-child { width: var(--w-m, 100%); }
   .sec--reverse-m > .sec-inner { flex-direction: column-reverse; }
 }
 
@@ -87,6 +102,10 @@
 .tx > :first-child { margin-top: 0; }
 .tx > :last-child { margin-bottom: 0; }
 .tx a { text-decoration: underline; text-underline-offset: 2px; }
+
+/* Bu widget'lar <figure> kullanır; tarayıcının varsayılan
+   `margin: 1em 40px` kuralı görseli sütununun dışına taşırır. */
+.img-frame, .gallery-item, .tst { margin: 0; }
 
 .img-frame { display: inline-block; max-width: 100%; overflow: hidden; line-height: 0; }
 .img-frame img { display: block; width: 100%; height: auto; }
@@ -154,6 +173,16 @@
 .cl-title { margin: 0; }
 .cl-excerpt { margin: 0; }
 
+/* Üst başlık sayfa içeriğinin üstünde kalmalı.
+
+   Her bölümün `.sec-inner` kabı konumlandırılmış ve `z-index: 1` taşıyor;
+   bu da her bölümü kendi yığın bağlamı yapıyor. Dolayısıyla menünün açılan
+   kutusundaki `z-index: 40`, yalnızca kendi bölümünün içinde geçerli.
+   Üst başlıktan sonra gelen bölümler (ör. karşılama slaytı) eşit sıradaki
+   bağlamlar olduğu için belgede sonra geldiklerinden üste biniyor ve açılan
+   menüyü örtüyordu. Üst başlığı bir üst katmana almak bunu kökünden çözer. */
+header { position: relative; z-index: 50; }
+
 .nav { display: flex; align-items: center; gap: 28px; list-style: none; margin: 0; padding: 0; }
 .nav--vertical { flex-direction: column; align-items: stretch; }
 .nav-item-el { position: relative; }
@@ -178,14 +207,45 @@
 .logo-strip--gray .logo-item:hover img { filter: none; opacity: 1; }
 
 .slider { position: relative; overflow: hidden; }
-.slide { position: absolute; inset: 0; opacity: 0; transition: opacity .7s; }
-.slide.is-active { opacity: 1; }
-.slide-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.slide {
+  position: absolute; inset: 0; opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .75s cubic-bezier(.22, 1, .36, 1), visibility 0s linear .75s;
+}
+.slide.is-active { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+.slide::after {
+  content: '';
+  position: absolute;
+  inset: -12% -28%;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--c-primary);
+  opacity: 0;
+  transform: translateX(-115%) skewX(-12deg);
+}
+.slide.is-active.slide--from-right::after { animation: slider-accent-right .9s cubic-bezier(.76, 0, .24, 1); }
+.slide.is-active.slide--from-left::after { animation: slider-accent-left .9s cubic-bezier(.76, 0, .24, 1); }
+.slide.is-active.slide--from-right .slide-bg { animation: slider-reveal-right 1s cubic-bezier(.22, 1, .36, 1); }
+.slide.is-active.slide--from-left .slide-bg { animation: slider-reveal-left 1s cubic-bezier(.22, 1, .36, 1); }
+.slide-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  transform: scale(1.025); transition: transform var(--slider-interval, 6000ms) linear;
+}
+.slide.is-active .slide-bg--kb { transform: scale(1.095); }
 .slide-overlay { position: absolute; inset: 0; }
 .slide-inner { position: relative; z-index: 2; display: flex; align-items: center; height: 100%; max-width: var(--container, 1200px); margin-inline: auto; padding-inline: max(16px, var(--gutter, 24px)); }
 .slide-content { display: flex; flex-direction: column; gap: 1em; align-items: flex-start; }
 .slide-title { margin: 0; }
 .slide-text { margin: 0; }
+
+.slide-content > * {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity .55s cubic-bezier(.22, 1, .36, 1), transform .7s cubic-bezier(.22, 1, .36, 1);
+}
+.slide.is-active .slide-content > * { opacity: 1; transform: none; }
+.slide.is-active .slide-content > :nth-child(1) { transition-delay: .14s; }
+.slide.is-active .slide-content > :nth-child(2) { transition-delay: .22s; }
+.slide.is-active .slide-content > :nth-child(3) { transition-delay: .30s; }
+.slide.is-active .slide-content > :nth-child(4) { transition-delay: .38s; }
 
 .tst { display: flex; flex-direction: column; gap: 1em; }
 .tst-quote { margin: 0; }
@@ -201,14 +261,16 @@
 .slider-arrow {
   position: absolute; top: 50%; z-index: 3;
   display: flex; align-items: center; justify-content: center;
-  width: 44px; height: 44px; transform: translateY(-50%);
-  border: 0; border-radius: 999px; cursor: pointer;
-  background: rgb(255 255 255 / .9); color: #111;
-  font-size: 20px; transition: background .2s;
+  width: 48px; height: 48px; transform: translateY(-50%);
+  border: 1px solid rgb(255 255 255 / .42); border-radius: 999px; cursor: pointer;
+  background: rgb(15 15 15 / .28); color: #fff;
+  font-size: 20px; backdrop-filter: blur(6px);
+  transition: background-color .2s, border-color .2s, transform .25s cubic-bezier(.22, 1, .36, 1);
 }
-.slider-arrow:hover { background: #fff; }
-.slider-arrow--prev { left: 16px; }
-.slider-arrow--next { right: 16px; }
+.slider-arrow:hover { background: var(--c-primary); border-color: var(--c-primary); }
+.slider-arrow:active { transform: translateY(-50%) scale(.94); }
+.slider-arrow--prev { left: max(16px, calc((100vw - var(--container, 1200px)) / 2 - 68px)); }
+.slider-arrow--next { right: max(16px, calc((100vw - var(--container, 1200px)) / 2 - 68px)); }
 
 .slider-dots { position: absolute; bottom: 20px; left: 50%; z-index: 3; display: flex; gap: 8px; transform: translateX(-50%); }
 .slider-dots button {
@@ -217,8 +279,34 @@
 }
 .slider-dots button[aria-selected="true"] { width: 26px; background: #fff; }
 
-.slide-bg--kb { animation: kenburns 18s ease-in-out infinite alternate; }
-@keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.09); } }
+.slider-status {
+  position: absolute; z-index: 3; bottom: 22px;
+  left: max(24px, calc((100vw - var(--container, 1200px)) / 2 + var(--gutter, 24px)));
+  display: flex; align-items: center; gap: 10px;
+  color: #fff; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.slider-progress { position: relative; width: 84px; height: 2px; overflow: hidden; background: rgb(255 255 255 / .35); }
+.slider-progress span { display: block; width: 100%; height: 100%; background: var(--c-primary); transform: scaleX(0); transform-origin: left; }
+.slider.is-progressing .slider-progress span { animation: slider-progress var(--slider-interval, 6000ms) linear forwards; }
+@keyframes slider-progress { to { transform: scaleX(1); } }
+@keyframes slider-accent-right {
+  0% { opacity: .86; transform: translateX(-115%) skewX(-12deg); }
+  45% { opacity: .86; }
+  100% { opacity: 0; transform: translateX(115%) skewX(-12deg); }
+}
+@keyframes slider-accent-left {
+  0% { opacity: .86; transform: translateX(115%) skewX(12deg); }
+  45% { opacity: .86; }
+  100% { opacity: 0; transform: translateX(-115%) skewX(12deg); }
+}
+@keyframes slider-reveal-right {
+  from { clip-path: inset(0 0 0 100%); }
+  to { clip-path: inset(0); }
+}
+@keyframes slider-reveal-left {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}
 
 .nav-toggle { display: none; flex-direction: column; gap: 5px; padding: 8px; background: none; border: 0; cursor: pointer; }
 .nav-toggle span { display: block; width: 22px; height: 2px; background: currentColor; transition: .25s; }
@@ -248,8 +336,8 @@
 
 /* Mobil menü: kırılımın altında yandan açılan panel */
 @media (max-width: 1024px) {
-  [data-menu][data-breakpoint="tablet"] .nav-toggle { display: flex; }
-  [data-menu][data-breakpoint="tablet"] .nav {
+  [data-menu][data-mobile="drawer"][data-breakpoint="tablet"] .nav-toggle { display: flex; }
+  [data-menu][data-mobile="drawer"][data-breakpoint="tablet"] .nav {
     position: fixed; inset: 0 0 0 auto; z-index: 60;
     flex-direction: column; align-items: stretch; justify-content: flex-start;
     width: min(320px, 86vw); padding: 5rem 1.5rem 2rem; gap: .25rem;
@@ -258,13 +346,13 @@
     transform: translateX(100%); transition: transform .3s cubic-bezier(.2,.7,.3,1);
     overflow-y: auto;
   }
-  [data-menu][data-breakpoint="tablet"].is-open .nav { transform: none; }
-  [data-menu][data-breakpoint="tablet"] .nav-sub { position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none; padding-left: 1rem; }
+  [data-menu][data-mobile="drawer"][data-breakpoint="tablet"].is-open .nav { transform: none; }
+  [data-menu][data-mobile="drawer"][data-breakpoint="tablet"] .nav-sub { position: static; opacity: 1; visibility: visible; transform: none; box-shadow: none; padding-left: 1rem; }
 }
 
 @media (max-width: 767px) {
-  [data-menu][data-breakpoint="mobile"] .nav-toggle { display: flex; }
-  [data-menu][data-breakpoint="mobile"] .nav {
+  [data-menu][data-mobile="drawer"][data-breakpoint="mobile"] .nav-toggle { display: flex; }
+  [data-menu][data-mobile="drawer"][data-breakpoint="mobile"] .nav {
     position: fixed; inset: 0 0 0 auto; z-index: 60;
     flex-direction: column; align-items: stretch; justify-content: flex-start;
     width: min(320px, 86vw); padding: 5rem 1.5rem 2rem;
@@ -272,5 +360,21 @@
     transform: translateX(100%); transition: transform .3s cubic-bezier(.2,.7,.3,1);
     overflow-y: auto;
   }
-  [data-menu][data-breakpoint="mobile"].is-open .nav { transform: none; }
+  [data-menu][data-mobile="drawer"][data-breakpoint="mobile"].is-open .nav { transform: none; }
+}
+
+@media (max-width: 767px) {
+  .slider-arrow { top: auto; bottom: 52px; width: 40px; height: 40px; font-size: 17px; transform: none; }
+  .slider-arrow:active { transform: scale(.94); }
+  .slider-arrow--prev { left: 10px; }
+  .slider-arrow--next { right: 10px; }
+  .slider-status { left: 16px; bottom: 18px; }
+  .slider-progress { width: 54px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide, .slide-bg, .slide-content > * { transition-duration: .01ms !important; }
+  .slide::after, .slide.is-active .slide-bg { animation: none !important; }
+  .slide-bg--kb { transform: none !important; }
+  .slider-progress span { animation: none !important; transform: scaleX(1); }
 }

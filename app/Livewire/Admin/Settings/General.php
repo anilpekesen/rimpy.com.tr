@@ -25,7 +25,7 @@ class General extends Component
         ], Setting::get('general', []) ?: []);
 
         $this->contact = array_replace([
-            'email' => '', 'phone' => '', 'whatsapp' => '',
+            'email' => '', 'phone' => '', 'mobile' => '', 'whatsapp' => '', 'fax' => '',
             'address' => Locales::map(''), 'working_hours' => Locales::map(''),
         ], Setting::get('contact', []) ?: []);
 
@@ -40,6 +40,9 @@ class General extends Component
             'general.site_name' => 'required|string|max:120',
             'contact.email' => 'nullable|email|max:190',
             'contact.phone' => 'nullable|string|max:40',
+            'contact.mobile' => 'nullable|string|max:40',
+            'contact.whatsapp' => 'nullable|string|max:40',
+            'contact.fax' => 'nullable|string|max:40',
             'social.*' => 'nullable|url|max:255',
         ], [
             'general.site_name.required' => 'Site adı zorunludur.',

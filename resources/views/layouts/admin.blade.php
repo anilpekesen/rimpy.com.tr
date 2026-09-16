@@ -75,6 +75,10 @@
                class="{{ request()->routeIs('admin.menus.*') ? 'nav-item-active' : 'nav-item' }}">
                 <x-icon name="menu" class="size-4.5 shrink-0"/> Menüler
             </a>
+            <a href="{{ route('admin.sliders.index') }}" wire:navigate
+               class="{{ request()->routeIs('admin.sliders.*') ? 'nav-item-active' : 'nav-item' }}">
+                <x-icon name="image" class="size-4.5 shrink-0"/> Sliderlar
+            </a>
             <a href="{{ route('admin.templates.index') }}" wire:navigate
                class="{{ request()->routeIs('admin.templates.*') ? 'nav-item-active' : 'nav-item' }}">
                 <x-icon name="blocks" class="size-4.5 shrink-0"/> Şablonlar

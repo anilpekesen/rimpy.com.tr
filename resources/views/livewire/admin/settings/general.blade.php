@@ -54,7 +54,7 @@
     <section class="card-pad space-y-4">
         <div>
             <h2 class="text-sm font-semibold text-ink-900">İletişim bilgileri</h2>
-            <p class="mt-0.5 text-xs text-ink-500">Sitenin alt bilgisinde ve iletişim sayfasında kullanılır.</p>
+            <p class="mt-0.5 text-xs text-ink-500">Sitenin her yerindeki numaralar ve e-posta buradan gelir; burada değiştirmek hepsini birden günceller.</p>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-2">
@@ -65,15 +65,27 @@
                 @error('contact.email') <p class="error">{{ $message }}</p> @enderror
             </div>
             <div>
-                <label for="c-phone" class="label">Telefon</label>
-                <input id="c-phone" type="tel" wire:model="contact.phone" class="field">
+                <label for="c-phone" class="label">Telefon (santral)</label>
+                <input id="c-phone" type="tel" wire:model="contact.phone" class="field" placeholder="0312 000 00 00">
+                <p class="hint">Sitede öne çıkan ana numara.</p>
+            </div>
+            <div>
+                <label for="c-mobile" class="label">Cep telefonu</label>
+                <input id="c-mobile" type="tel" wire:model="contact.mobile" class="field" placeholder="0500 000 00 00">
+                <p class="hint">Telefonla aynıysa sitede bir kez yazılır.</p>
             </div>
             <div>
                 <label for="c-wa" class="label">WhatsApp numarası</label>
                 <input id="c-wa" type="tel" wire:model="contact.whatsapp" class="field" placeholder="905550000000">
                 <p class="hint">Başında ülke kodu, boşluksuz.</p>
             </div>
+            <div>
+                <label for="c-fax" class="label">Faks</label>
+                <input id="c-fax" type="tel" wire:model="contact.fax" class="field">
+            </div>
         </div>
+
+        <p class="text-xs text-ink-500">Boş bıraktığınız bilgi sitede hiç görünmez.</p>
 
         @foreach ($locales as $locale)
             <div>

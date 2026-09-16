@@ -3,12 +3,11 @@
 namespace App\Livewire\Builder;
 
 use App\Builder\Controls;
-use App\Builder\RenderContext;
-use App\Builder\Renderer;
 use App\Builder\StyleCompiler;
 use App\Builder\Tree;
 use App\Builder\TreeEditor;
 use App\Builder\WidgetRegistry;
+use App\Http\Controllers\Admin\BuilderPreviewController;
 use App\Models\ContentItem;
 use App\Models\Page;
 use App\Models\PageRevision;
@@ -16,14 +15,16 @@ use App\Models\Template;
 use App\Services\ActivityLogger;
 use App\Support\Locales;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
  * Sayfa kurucusu.
  *
- * Sol tarafta öğe kütüphanesi ve katman ağacı, ortada canlı tuval, sağda
- * seçili öğenin ayarları bulunur. Ağaç tek bir dizi olarak taşınır; her
+ * Sol tarafta öğe kütüphanesi ve katman ağacı, ortada sitenin kendisiyle
+ * çizilen önizleme çerçevesi (BuilderPreviewController), sağda seçili öğenin
+ * ayarları bulunur. Ağaç tek bir dizi olarak taşınır; her
  * değişiklikte yeniden çizilir ve CSS yeniden derlenir. Kaydetmeden önceki
  * hâl geri alma yığınında tutulur.
  */
@@ -98,7 +99,23 @@ class Editor extends Component
             ? $subject->builder_data
             : $subject->translation($this->locale)?->builder_data;
 
-        return Tree::fromArray($data)->toArray()['elements'];
+        return self::plainArray(Tree::fromArray($data)->toArray()['elements']);
+    }
+
+    /**
+     * Ağacı düzenleyicinin beklediği düz dizi biçimine indirger.
+     *
+     * `Element::toArray()` ayarları bilinçli olarak nesneye çevirir: boş ayar
+     * kümesi JSON'a `[]` değil `{}` olarak yazılsın diye. Düzenleyici ise
+     * ayarlara dizi gibi erişir (`$element['settings'][$key]`), dolayısıyla o
+     * nesneler burada tekrar diziye indirgenmezse ilk seçimde
+     * "Cannot use object of type stdClass as array" hatası alınır.
+     *
+     * Saklama biçimi değişmiyor; bu dönüşüm yalnızca bellekteki kopya için.
+     */
+    private static function plainArray(array $value): array
+    {
+        return json_decode(json_encode($value), true) ?? [];
     }
 
     // ── Ağaç işlemleri ───────────────────────────────────────────────────
@@ -378,7 +395,10 @@ class Editor extends Component
     private function repeaterRows(string $key): array
     {
         $element = $this->selectedId ? TreeEditor::find($this->tree, $this->selectedId) : null;
-        $rows = $element['settings'][$key] ?? null;
+        // Hiç dokunulmamış liste panelde varsayılan satırlarıyla görünür;
+        // ilk düzenleme de o satırların üzerinden yapılmalı, yoksa satır
+        // eklemek ya da silmek varsayılanları sessizce yok eder.
+        $rows = $element['settings'][$key] ?? ($this->controlDefinition($key)['default'] ?? null);
 
         return is_array($rows) ? array_values($rows) : [];
     }
@@ -563,7 +583,7 @@ class Editor extends Component
         $this->pushHistory();
 
         foreach (Tree::fromArray($template->builder_data)->elements as $element) {
-            $this->tree[] = $element->withFreshIds()->toArray();
+            $this->tree[] = self::plainArray($element->withFreshIds()->toArray());
         }
     }
 
@@ -594,10 +614,10 @@ class Editor extends Component
         $this->pushHistory();
 
         // Kimlikler yenilenir; iki dil birbirinin stilini ezmez.
-        $this->tree = array_map(
+        $this->tree = self::plainArray(array_map(
             fn ($element) => \App\Builder\Element::fromArray($element)->withFreshIds()->toArray(),
             Tree::fromArray($data)->toArray()['elements']
-        );
+        ));
 
         $this->dispatch('notify', message: 'Tasarım kopyalandı. Metinleri bu dile çevirmeyi unutmayın.');
     }
@@ -616,15 +636,11 @@ class Editor extends Component
     public function render()
     {
         $registry = app(WidgetRegistry::class);
-        $tree = Tree::fromArray(['elements' => $this->tree]);
-
-        $context = new RenderContext($this->locale, editing: true, subject: $this->subject());
 
         $selected = $this->selectedId ? TreeEditor::find($this->tree, $this->selectedId) : null;
 
         return view('livewire.builder.editor', [
-            'canvas' => app(Renderer::class)->render($tree, $context),
-            'canvasCss' => app(StyleCompiler::class)->compile($tree, $this->device),
+            'previewUrl' => $this->previewUrl(),
             'widgets' => $this->filteredWidgets($registry),
             'selected' => $selected,
             'selectedControls' => $this->controlsFor($selected, $registry),
@@ -636,6 +652,33 @@ class Editor extends Component
             'canUndo' => $this->canUndo(),
             'canRedo' => $this->canRedo(),
         ])->title('Tasarım — '.$this->subjectTitle());
+    }
+
+    /**
+     * Ortadaki önizleme çerçevesinin adresi.
+     *
+     * Anahtar ağacın içeriğinden türetilir: değişmeyen ağaç (ör. yalnızca
+     * seçim değiştiğinde) çerçeveyi yeniden yüklemez, geri alınan değişiklik
+     * önbellekteki eski önizlemeye döner.
+     */
+    private function previewUrl(): string
+    {
+        $payload = [
+            'user' => auth()->id(),
+            'type' => $this->subjectType,
+            'id' => $this->subjectId,
+            'locale' => $this->locale,
+            'tree' => $this->tree,
+        ];
+
+        $key = sha1(json_encode($payload));
+        $cacheKey = BuilderPreviewController::cacheKey($key);
+
+        if (! Cache::has($cacheKey)) {
+            Cache::put($cacheKey, $payload, BuilderPreviewController::TTL);
+        }
+
+        return route('admin.builder.preview', $key);
     }
 
     private function filteredWidgets(WidgetRegistry $registry)

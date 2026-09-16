@@ -153,7 +153,7 @@ class MenuBuilder extends Component
 
     public function moveItem(int $id, string $direction): void
     {
-        $item = MenuItem::findOrFail($id);
+        $item = MenuItem::where('menu_id', $this->menuId)->findOrFail($id);
 
         $neighbour = MenuItem::where('menu_id', $item->menu_id)
             ->where('parent_id', $item->parent_id)
@@ -169,6 +169,70 @@ class MenuBuilder extends Component
         [$item->sort, $neighbour->sort] = [$neighbour->sort, $item->sort];
         $item->save();
         $neighbour->save();
+
+        $this->dispatch('notify', message: 'Menü sırası kaydedildi.');
+    }
+
+    /** Öğeyi kendisinden önce gelen kardeşin altına taşır. */
+    public function indentItem(int $id): void
+    {
+        $item = MenuItem::where('menu_id', $this->menuId)->findOrFail($id);
+        $previous = MenuItem::where('menu_id', $item->menu_id)
+            ->where('parent_id', $item->parent_id)
+            ->where('sort', '<', $item->sort)
+            ->orderByDesc('sort')
+            ->first();
+
+        if (! $previous) {
+            $this->dispatch('notify', message: 'Altına alınacak önceki bir öğe yok.');
+
+            return;
+        }
+
+        if ($this->itemDepth($previous) >= 3) {
+            $this->dispatch('notify', message: 'Menü en fazla üç alt seviyeden oluşabilir.');
+
+            return;
+        }
+
+        $item->update([
+            'parent_id' => $previous->id,
+            'sort' => (MenuItem::where('parent_id', $previous->id)->max('sort') ?? -1) + 1,
+        ]);
+
+        $this->dispatch('notify', message: 'Öğe alt menüye taşındı.');
+    }
+
+    /** Öğeyi bulunduğu alt menüden bir üst seviyeye çıkarır. */
+    public function outdentItem(int $id): void
+    {
+        $item = MenuItem::where('menu_id', $this->menuId)->findOrFail($id);
+        $parent = $item->parent_id ? MenuItem::find($item->parent_id) : null;
+
+        if (! $parent) {
+            $this->dispatch('notify', message: 'Öğe zaten ana seviyede.');
+
+            return;
+        }
+
+        $item->update([
+            'parent_id' => $parent->parent_id,
+            'sort' => $parent->sort + 1,
+        ]);
+
+        $this->dispatch('notify', message: 'Öğe üst seviyeye taşındı.');
+    }
+
+    private function itemDepth(MenuItem $item): int
+    {
+        $depth = 0;
+
+        while ($item->parent_id && $depth <= 3) {
+            $depth++;
+            $item = MenuItem::find($item->parent_id) ?? $item;
+        }
+
+        return $depth;
     }
 
     /** Sürükle-bırak sonrasında bütün ağacın sırasını tek işlemde kaydeder. */

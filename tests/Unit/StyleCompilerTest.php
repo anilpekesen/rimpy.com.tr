@@ -107,9 +107,36 @@ class StyleCompilerTest extends TestCase
         ]);
 
         $this->assertStringContainsString('border-top-width:1px', $css);
-        $this->assertStringContainsString('border-style:solid', $css);
+        $this->assertStringContainsString('border-top-style:solid', $css);
+        $this->assertStringContainsString('border-left-style:solid', $css);
         $this->assertStringContainsString('border-color:var(--c-border)', $css);
         $this->assertStringContainsString('border-top-left-radius:12px', $css);
+    }
+
+    /**
+     * Yalnızca bir kenara kalınlık verildiğinde diğer kenarlar çizilmemeli.
+     *
+     * Çizgi tipi tek bir `border-style` olarak yazılırsa, kalınlığı
+     * belirtilmemiş kenarlar tarayıcının varsayılanını (3px) alır ve
+     * kullanıcının istemediği bir çerçeve ortaya çıkar.
+     */
+    public function test_tek_kenarlik_dort_tarafa_yayilmiyor(): void
+    {
+        $css = $this->compile([
+            '_border' => [
+                'style' => 'solid',
+                'color' => '@primary',
+                'width' => ['t' => 2, 'unit' => 'px'],
+            ],
+        ]);
+
+        $this->assertStringContainsString('border-top-width:2px', $css);
+        $this->assertStringContainsString('border-top-style:solid', $css);
+
+        foreach (['right', 'bottom', 'left'] as $side) {
+            $this->assertStringNotContainsString("border-{$side}-style", $css);
+            $this->assertStringNotContainsString("border-{$side}-width", $css);
+        }
     }
 
     public function test_bos_ayarlar_css_uretmiyor(): void

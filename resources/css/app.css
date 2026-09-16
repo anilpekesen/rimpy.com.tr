@@ -137,3 +137,10 @@ body:has(.menu-item-dragging) .menu-dropzone:empty::after { display: block; }
 .menu-item-ghost { opacity: 0.35; }
 .menu-item-chosen { outline: 2px solid var(--color-brand-400); outline-offset: 2px; }
 .menu-item-dragging { opacity: 0.95; }
+.is-menu-dragging .menu-dropzone:empty {
+  @apply min-h-10 border border-dashed border-brand-300 bg-brand-50;
+}
+.is-menu-dragging .menu-dropzone:empty::after {
+  content: "Alt menü yapmak için buraya bırakın";
+  @apply block px-2 py-2 text-center text-[11px] text-brand-700;
+}

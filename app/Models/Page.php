@@ -84,10 +84,33 @@ class Page extends Model
             }
 
             array_unshift($segments, $slug);
-            $node = $node->parent;
+            $node = $node->parentPage();
         }
 
         return '/'.implode('/', $segments);
+    }
+
+    /**
+     * Üst sayfa — ilişki önceden yüklenmemişse açıkça sorgulanır.
+     *
+     * `$page->parent` demek, çağıran taraf ilişkiyi yüklememişse tembel
+     * yükleme sayılır ve geliştirme ortamında hata fırlatır. Adres üretimi
+     * her yerden çağrıldığı için burada garantiye alınıyor.
+     */
+    public function parentPage(): ?self
+    {
+        if ($this->relationLoaded('parent')) {
+            return $this->parent;
+        }
+
+        if (! $this->parent_id) {
+            return null;
+        }
+
+        return tap(
+            static::with('translations')->find($this->parent_id),
+            fn (?self $parent) => $this->setRelation('parent', $parent)
+        );
     }
 
     public function statusLabel(): string

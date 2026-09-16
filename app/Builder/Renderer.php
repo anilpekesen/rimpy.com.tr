@@ -173,6 +173,13 @@ class Renderer
             if ($element->widget) {
                 $attributes['data-el-widget'] = $element->widget;
             }
+
+            // Önizlemede üzerine gelinince görünen ad.
+            $attributes['data-el-label'] = match ($element->type) {
+                'section' => 'Bölüm',
+                'column' => 'Sütun',
+                default => $this->registry->find($element->widget)?->label() ?? 'Öğe',
+            };
         }
 
         return collect($attributes)

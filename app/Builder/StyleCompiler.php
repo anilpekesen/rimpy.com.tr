@@ -256,14 +256,23 @@ class StyleCompiler
         if (($width = $value['width'] ?? null) && is_array($width)) {
             $unit = $width['unit'] ?? 'px';
 
+            /*
+             | Çizgi tipi her kenara ayrı ayrı yazılır. Tek bir `border-style`
+             | yazılsaydı, kalınlığı verilmemiş kenarlar tarayıcının
+             | varsayılan kalınlığını (`medium`, 3px) alır ve kullanıcı
+             | yalnızca üst çizgi istediğinde dört tarafı çerçeveli bir kutu
+             | çıkardı.
+             */
             foreach (['t' => 'top', 'r' => 'right', 'b' => 'bottom', 'l' => 'left'] as $short => $side) {
-                if (($width[$short] ?? null) !== null && $width[$short] !== '') {
-                    $out["border-{$side}-width"] = $width[$short].$unit;
+                if (($width[$short] ?? null) === null || $width[$short] === '') {
+                    continue;
                 }
-            }
 
-            if ($style !== 'none') {
-                $out['border-style'] = $style;
+                $out["border-{$side}-width"] = $width[$short].$unit;
+
+                if ($style !== 'none') {
+                    $out["border-{$side}-style"] = $style;
+                }
             }
         }
 

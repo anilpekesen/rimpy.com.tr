@@ -43,11 +43,14 @@ Route::prefix($admin)->name('admin.')->group(function () {
         Route::get('kurucu/sayfa/{page}/{locale?}', App\Livewire\Builder\Editor::class)->name('builder.page');
         Route::get('kurucu/sablon/{template}', App\Livewire\Builder\Editor::class)->name('builder.template');
         Route::get('kurucu/icerik/{item}/{locale?}', App\Livewire\Builder\Editor::class)->name('builder.content');
+        Route::get('kurucu/onizleme/{key}', App\Http\Controllers\Admin\BuilderPreviewController::class)
+            ->where('key', '[a-f0-9]{40}')->name('builder.preview');
 
         // Tasarım
         Route::get('tasarim', App\Livewire\Admin\Design\ThemeSettings::class)->name('design.theme');
         Route::get('sablonlar', App\Livewire\Admin\Design\TemplateList::class)->name('templates.index');
         Route::get('menuler', App\Livewire\Admin\Design\MenuBuilder::class)->name('menus.index');
+        Route::get('sliderlar', App\Livewire\Admin\Design\SliderManager::class)->name('sliders.index');
 
         // Medya
         Route::get('medya', App\Livewire\Admin\MediaLibrary::class)->name('media.index');

@@ -21,6 +21,13 @@
             </span>
 
             <div class="flex shrink-0 gap-0.5 opacity-70 transition group-hover:opacity-100 group-focus-within:opacity-100">
+                <button wire:click="moveItem({{ $item->id }}, 'up')" class="btn-ghost btn-sm" title="Yukarı taşı" aria-label="Yukarı taşı">↑</button>
+                <button wire:click="moveItem({{ $item->id }}, 'down')" class="btn-ghost btn-sm" title="Aşağı taşı" aria-label="Aşağı taşı">↓</button>
+                @if ($depth > 0)
+                    <button wire:click="outdentItem({{ $item->id }})" class="btn-ghost btn-sm" title="Üst seviyeye çıkar" aria-label="Üst seviyeye çıkar">←</button>
+                @else
+                    <button wire:click="indentItem({{ $item->id }})" class="btn-ghost btn-sm" title="Önceki öğenin altına al" aria-label="Önceki öğenin altına al">→</button>
+                @endif
                 <button wire:click="editItem({{ $item->id }})" class="btn-ghost btn-sm" title="Düzenle">
                     <x-icon name="edit" class="size-4"/><span class="sr-only">Düzenle</span>
                 </button>

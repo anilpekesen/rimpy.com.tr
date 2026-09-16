@@ -27,7 +27,7 @@ $devices = ['d' => 'Masaüstü', 't' => 'Tablet', 'm' => 'Telefon'];
 @endphp
 
 <div class="space-y-1.5">
-    @if ($type !== 'toggle')
+    @if (! in_array($type, ['toggle', 'notice'], true))
         <div class="flex items-baseline justify-between gap-2">
             <label for="{{ $id }}" class="label mb-0">{{ $control['label'] }}</label>
             @if ($responsive)
@@ -39,6 +39,18 @@ $devices = ['d' => 'Masaüstü', 't' => 'Tablet', 'm' => 'Telefon'];
     @endif
 
     @switch ($type)
+
+        {{-- ── Bilgi kutusu (değer tutmaz) ───────────────────────────── --}}
+        @case('notice')
+            <div class="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs leading-relaxed text-amber-900">
+                <p>{{ $control['text'] }}</p>
+                @if (! empty($control['route']) && Route::has($control['route']) && auth()->user()?->atLeast('admin'))
+                    <a href="{{ route($control['route']) }}" target="_blank" class="mt-1.5 inline-flex items-center gap-1 font-semibold underline underline-offset-2">
+                        {{ $control['link_label'] ?? 'Aç' }} ↗
+                    </a>
+                @endif
+            </div>
+            @break
 
         {{-- ── Metin ──────────────────────────────────────────────────── --}}
         @case('text')
@@ -330,10 +342,12 @@ $devices = ['d' => 'Masaüstü', 't' => 'Tablet', 'm' => 'Telefon'];
         @case('form_select')
         @case('menu_select')
         @case('template_select')
+        @case('slider_select')
             @php
                 $options = match ($type) {
                     'form_select' => \App\Models\Form::orderBy('name')->pluck('name', 'id'),
                     'menu_select' => \App\Models\Menu::orderBy('name')->pluck('name', 'key'),
+                    'slider_select' => \App\Models\Slider::where('is_active', true)->orderBy('name')->pluck('name', 'id'),
                     default => \App\Models\Template::where('type', $control['template_type'] ?? 'section')->orderBy('name')->pluck('name', 'id'),
                 };
             @endphp

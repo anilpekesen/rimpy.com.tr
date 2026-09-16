@@ -12,9 +12,14 @@ use Illuminate\Database\Eloquent\Model;
 class Breadcrumbs
 {
     /** @return array<int, array{label: string, url: ?string}> */
-    public static function for(?Model $subject, string $locale, string $homeLabel = 'Ana Sayfa'): array
+    public static function for(?Model $subject, string $locale, ?string $homeLabel = null): array
     {
         $prefix = Urls::prefix($locale);
+
+        // Etiket verilmediyse arayüz metinlerinden okunur; tek dilli
+        // İngilizce bir sitede "Ana Sayfa" yazması istenmez.
+        $homeLabel ??= \App\Models\Translation::get('home', 'Ana Sayfa', $locale);
+
         $trail = [['label' => $homeLabel, 'url' => $prefix ?: '/']];
 
         if ($subject instanceof Page) {
@@ -25,7 +30,7 @@ class Breadcrumbs
 
             while ($node && $guard++ < 10) {
                 array_unshift($chain, $node);
-                $node = $node->parent;
+                $node = $node->parentPage();
             }
 
             foreach ($chain as $page) {

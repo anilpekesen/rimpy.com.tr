@@ -1,4 +1,20 @@
-@php $slides = $settings['slides'] ?? []; @endphp
+@php
+    $savedSlider = ! empty($settings['slider_id'])
+        ? \App\Models\Slider::where('is_active', true)->with('activeSlides.image')->find($settings['slider_id'])
+        : null;
+
+    $slides = $savedSlider
+        ? $savedSlider->activeSlides->map(fn ($slide) => [
+            'image' => $slide->image_id,
+            'eyebrow' => $context->localize($slide->eyebrow, true),
+            'title' => $context->localize($slide->title, true),
+            'text' => $context->localize($slide->text, true),
+            'button_text' => $context->localize($slide->button_label, true),
+            'link' => $slide->link,
+            'align' => $slide->align,
+        ])->values()->all()
+        : ($settings['slides'] ?? []);
+@endphp
 
 @if ($slides)
     <div class="slider"

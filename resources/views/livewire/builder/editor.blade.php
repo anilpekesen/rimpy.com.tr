@@ -145,25 +145,30 @@
             </div>
         </aside>
 
-        {{-- ══ Tuval ══════════════════════════════════════════════════════ --}}
-        <main class="min-w-0 flex-1 overflow-y-auto bg-ink-200 p-4"
-              @click.self="$wire.selectElement(null)">
-            <div class="mx-auto bg-white shadow-lg transition-[max-width] duration-300"
+        {{-- ══ Önizleme ════════════════════════════════════════════════════
+             Sayfa, sitenin kendi stilleri ve betikleriyle ayrı bir çerçevede
+             çizilir. Her değişiklikte yeni sürüm arkadaki ikinci çerçevede
+             yüklenir, hazır olunca öne alınır; ekran boşalıp titremez. --}}
+        <main class="relative min-w-0 flex-1 bg-ink-200 p-3"
+              @click.self="$wire.selectElement(null)"
+              x-data="builderPreview">
+
+            <span x-ref="probe" class="hidden" data-url="{{ $previewUrl }}" data-selected="{{ $selectedId }}"></span>
+
+            <div class="relative mx-auto h-full overflow-hidden rounded-md bg-white shadow-lg transition-[max-width] duration-300"
                  style="max-width: {{ ['d' => '100%', 't' => '1024px', 'm' => '390px'][$device] }}">
+                <div class="absolute inset-0" wire:ignore>
+                    <iframe x-ref="a" title="Sayfa önizlemesi" class="absolute inset-0 size-full border-0 bg-white"></iframe>
+                    <iframe x-ref="b" title="Sayfa önizlemesi" class="invisible absolute inset-0 size-full border-0 bg-white" aria-hidden="true"></iframe>
+                </div>
 
-                <style>{!! $canvasCss !!}</style>
-
-                <div class="builder-canvas" wire:ignore.self
-                     x-data
-                     @click="
-                        const el = $event.target.closest('[data-el]');
-                        if (el) { $event.preventDefault(); $event.stopPropagation(); $wire.selectElement(el.dataset.el); }
-                     ">
-                    {!! $canvas !!}
+                <div x-show="loading" x-transition.opacity
+                     class="pointer-events-none absolute right-3 top-3 rounded-full bg-ink-900/85 px-3 py-1.5 text-[11px] font-medium text-white shadow">
+                    Önizleme güncelleniyor…
                 </div>
 
                 @if (! $tree)
-                    <div class="flex flex-col items-center justify-center gap-3 px-6 py-24 text-center">
+                    <div class="absolute inset-x-0 top-1/3 mx-auto flex max-w-sm flex-col items-center gap-3 rounded-xl bg-white p-6 text-center shadow-lg">
                         <x-icon name="blocks" class="size-10 text-ink-200"/>
                         <div>
                             <p class="text-sm font-medium text-ink-700">Sayfa henüz boş</p>
@@ -173,11 +178,6 @@
                             <x-icon name="plus" class="size-4"/> Bölüm ekle
                         </button>
                     </div>
-                @else
-                    <button wire:click="$set('showLayoutPicker', true)"
-                            class="flex w-full items-center justify-center gap-1.5 border-t border-dashed border-ink-200 py-4 text-xs font-medium text-ink-500 transition hover:bg-brand-50 hover:text-brand-700">
-                        <x-icon name="plus" class="size-4"/> Bölüm ekle
-                    </button>
                 @endif
             </div>
         </main>

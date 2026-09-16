@@ -1,6 +1,6 @@
 @php
     $separator = ['chevron' => '›', 'slash' => '/', 'dash' => '—', 'dot' => '·'][$settings['separator'] ?? 'chevron'];
-    $trail = \App\Support\Breadcrumbs::for($context->subject, $context->locale, $settings['home_label'] ?? 'Ana Sayfa');
+    $trail = \App\Support\Breadcrumbs::for($context->subject, $context->locale, $settings['home_label'] ?: null);
 @endphp
 
 @if (count($trail) > 1)

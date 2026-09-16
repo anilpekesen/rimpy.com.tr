@@ -83,6 +83,16 @@ class Controls
         return array_merge(['type' => 'icon', 'label' => $label], $options);
     }
 
+    /**
+     * Değer tutmayan bilgi kutusu: bir bilginin bu panelde değil başka bir
+     * yerde değiştirildiğini söylemek için. `route` verilirse altına o
+     * sayfaya giden bağlantı konur.
+     */
+    public static function notice(string $text, array $options = []): array
+    {
+        return array_merge(['type' => 'notice', 'label' => '', 'text' => $text], $options);
+    }
+
     /** Kullanıcının satır ekleyip çıkarabildiği liste (özellikler, SSS, ekip...). */
     public static function repeater(string $label, array $fields, array $options = []): array
     {
@@ -193,8 +203,12 @@ class Controls
                 'flex-end' => ['label' => 'Alt', 'icon' => 'align-end-vertical'],
                 'stretch' => ['label' => 'Uzat', 'icon' => 'stretch-vertical'],
             ], ['selector' => '{{WRAPPER}} > .sec-inner', 'property' => 'align-items', 'default' => 'stretch']),
+            // Aralık doğrudan `gap` olarak değil bir değişken olarak yazılır:
+            // sütun genişlikleri de aynı değeri okuyup kendilerinden düşer,
+            // yoksa toplamı %100 olan sütunlar aralık kadar taşıp alt satıra
+            // kayardı.
             'gap' => self::slider('Sütun aralığı', [
-                'max' => 120, 'selector' => '{{WRAPPER}} > .sec-inner', 'property' => 'gap',
+                'max' => 120, 'selector' => '{{WRAPPER}} > .sec-inner', 'property' => '--col-gap',
             ]),
             'reverse_mobile' => self::toggle('Mobilde sütun sırasını ters çevir'),
             'overlay' => self::background('Üst katman rengi', ['selector' => '{{WRAPPER}} > .sec-overlay']),

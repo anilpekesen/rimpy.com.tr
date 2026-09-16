@@ -2,14 +2,22 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Admin\Design\MenuBuilder;
+use App\Livewire\Admin\Design\SliderManager;
+use App\Livewire\Admin\Settings\ContentTypes;
 use App\Models\ContentItem;
 use App\Models\ContentType;
 use App\Models\Form;
+use App\Models\Menu;
+use App\Models\MenuItem;
 use App\Models\Page;
+use App\Models\Slide;
+use App\Models\Slider;
 use App\Models\Taxonomy;
 use App\Models\Template;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -69,6 +77,7 @@ class AdminSmokeTest extends TestCase
             route('admin.design.theme'),
             route('admin.templates.index'),
             route('admin.menus.index'),
+            route('admin.sliders.index'),
             route('admin.forms.index'),
             route('admin.forms.edit', $form),
             route('admin.submissions.index'),
@@ -103,6 +112,66 @@ class AdminSmokeTest extends TestCase
             ->assertRedirect('/tr/olmayan-bir-adres');
 
         $this->get('/tr/olmayan-bir-adres')->assertNotFound();
+    }
+
+    public function test_menu_surukle_birak_sirasi_ve_hiyerarsisi_kaydedilir(): void
+    {
+        $menu = Menu::where('key', 'header')->firstOrFail();
+        $first = MenuItem::create([
+            'menu_id' => $menu->id,
+            'type' => 'url',
+            'url' => '/bir',
+            'label' => ['tr' => 'Bir'],
+            'sort' => 0,
+        ]);
+        $second = MenuItem::create([
+            'menu_id' => $menu->id,
+            'type' => 'url',
+            'url' => '/iki',
+            'label' => ['tr' => 'İki'],
+            'sort' => 1,
+        ]);
+
+        Livewire::actingAs($this->owner)
+            ->test(MenuBuilder::class)
+            ->set('menuId', $menu->id)
+            ->call('reorderItems', [
+                ['id' => $second->id, 'parent_id' => null, 'sort' => 0],
+                ['id' => $first->id, 'parent_id' => $second->id, 'sort' => 0],
+            ]);
+
+        $this->assertSame(0, $second->fresh()->sort);
+        $this->assertSame($second->id, $first->fresh()->parent_id);
+    }
+
+    public function test_hazir_icerik_modulu_tek_tikla_kurulur(): void
+    {
+        Livewire::actingAs($this->owner)
+            ->test(ContentTypes::class)
+            ->set('presetKey', 'projeler')
+            ->call('installPreset')
+            ->assertHasNoErrors();
+
+        $projects = ContentType::where('key', 'projeler')->firstOrFail();
+
+        $this->assertSame('Projeler', $projects->pluralLabel('tr'));
+        $this->assertTrue($projects->supports('gallery'));
+        $this->assertSame(['musteri', 'konum', 'yil'], collect($projects->fields)->pluck('key')->all());
+    }
+
+    public function test_slider_ve_slayt_olusturulup_siralanir(): void
+    {
+        $slider = Slider::create(['name' => 'Ana sayfa', 'key' => 'ana-sayfa']);
+        $first = Slide::create(['slider_id' => $slider->id, 'title' => ['tr' => 'Bir'], 'sort' => 0]);
+        $second = Slide::create(['slider_id' => $slider->id, 'title' => ['tr' => 'İki'], 'sort' => 1]);
+
+        Livewire::actingAs($this->owner)
+            ->test(SliderManager::class)
+            ->set('sliderId', $slider->id)
+            ->call('reorderSlides', [$second->id, $first->id]);
+
+        $this->assertSame(1, $first->fresh()->sort);
+        $this->assertSame(0, $second->fresh()->sort);
     }
 
     public function test_editor_ayarlara_giremez(): void

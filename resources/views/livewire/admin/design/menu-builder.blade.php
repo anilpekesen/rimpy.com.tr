@@ -1,4 +1,4 @@
-<div class="space-y-4">
+<div class="space-y-4" data-menu-builder x-data x-init="$nextTick(() => window.initMenuSortables($el))">
 
     <div class="flex flex-wrap items-center gap-2">
         @if ($menus->isNotEmpty())
@@ -103,7 +103,7 @@
                 <div class="border-b border-ink-100 px-4 py-2.5">
                     <h2 class="text-sm font-semibold text-ink-900">{{ $menu->name }}</h2>
                     <p class="mt-0.5 text-xs text-ink-500">
-                        Sıralamak için okları kullanın. Bir öğeyi alt menü yapmak için düzenleyip üst öğe seçin.
+                        Noktalı tutamaçtan sürükleyin. Oklarla da sıralayabilir veya alt menüye alabilirsiniz.
                     </p>
                 </div>
 
@@ -112,50 +112,13 @@
                         Menü boş. Soldaki listelerden bağlantı ekleyin.
                     </p>
                 @else
-                    <ul class="divide-y divide-ink-100">
-                        @foreach ($rootItems as $item)
-                            <li>
-                                <div class="group flex items-center gap-2 px-4 py-2.5">
-                                    <span class="min-w-0 flex-1">
-                                        <span class="block truncate text-sm font-medium text-ink-900 {{ $item->is_active ? '' : 'line-through opacity-50' }}">
-                                            {{ $item->title() }}
-                                        </span>
-                                        <span class="block truncate font-mono text-[11px] text-ink-400">
-                                            {{ $item->href() ?? 'Hedef bulunamadı — menüde gösterilmiyor' }}
-                                        </span>
-                                    </span>
-                                    <div class="flex shrink-0 gap-0.5">
-                                        <button wire:click="moveItem({{ $item->id }}, 'up')" class="btn-ghost btn-sm" title="Yukarı">↑</button>
-                                        <button wire:click="moveItem({{ $item->id }}, 'down')" class="btn-ghost btn-sm" title="Aşağı">↓</button>
-                                        <button wire:click="editItem({{ $item->id }})" class="btn-ghost btn-sm">
-                                            <x-icon name="edit" class="size-4"/><span class="sr-only">Düzenle</span>
-                                        </button>
-                                        <button wire:click="deleteItem({{ $item->id }})"
-                                                wire:confirm="“{{ $item->title() }}” menüden kaldırılacak. Devam edilsin mi?"
-                                                class="btn-ghost btn-sm text-red-600 hover:bg-red-50">
-                                            <x-icon name="trash" class="size-4"/><span class="sr-only">Sil</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                @foreach ($allItems->where('parent_id', $item->id)->sortBy('sort') as $child)
-                                    <div class="group flex items-center gap-2 border-t border-ink-50 py-2 pr-4 pl-10">
-                                        <span class="min-w-0 flex-1 truncate text-sm text-ink-700">{{ $child->title() }}</span>
-                                        <div class="flex shrink-0 gap-0.5 opacity-0 transition group-hover:opacity-100">
-                                            <button wire:click="moveItem({{ $child->id }}, 'up')" class="btn-ghost btn-sm">↑</button>
-                                            <button wire:click="moveItem({{ $child->id }}, 'down')" class="btn-ghost btn-sm">↓</button>
-                                            <button wire:click="editItem({{ $child->id }})" class="btn-ghost btn-sm">
-                                                <x-icon name="edit" class="size-4"/><span class="sr-only">Düzenle</span>
-                                            </button>
-                                            <button wire:click="deleteItem({{ $child->id }})" class="btn-ghost btn-sm text-red-600">
-                                                <x-icon name="trash" class="size-4"/><span class="sr-only">Sil</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </li>
-                        @endforeach
-                    </ul>
+                    <ol data-menu-sortable data-parent-id="" class="space-y-2 bg-ink-50/60 p-3">
+                        @include('livewire.admin.design.partials.menu-items', [
+                            'items' => $rootItems,
+                            'allItems' => $allItems,
+                            'depth' => 0,
+                        ])
+                    </ol>
                 @endif
             </section>
         </div>

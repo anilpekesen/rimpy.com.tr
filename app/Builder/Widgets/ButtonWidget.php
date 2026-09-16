@@ -38,16 +38,16 @@ class ButtonWidget extends Widget
                     'sm' => 'Küçük', 'md' => 'Orta', 'lg' => 'Büyük', 'xl' => 'Çok büyük',
                 ], ['default' => 'md']),
                 'bg' => Controls::color('Zemin rengi', [
-                    'selector' => '{{WRAPPER}} .btn', 'property' => 'background-color', 'default' => '@primary',
+                    'selector' => '{{WRAPPER}} .btn-el', 'property' => 'background-color', 'default' => '@primary',
                 ]),
-                'color' => Controls::color('Yazı rengi', ['selector' => '{{WRAPPER}} .btn', 'default' => '#ffffff']),
+                'color' => Controls::color('Yazı rengi', ['selector' => '{{WRAPPER}} .btn-el', 'default' => '#ffffff']),
                 'hover_bg' => Controls::color('Üzerine gelince zemin', [
-                    'selector' => '{{WRAPPER}} .btn:hover', 'property' => 'background-color',
+                    'selector' => '{{WRAPPER}} .btn-el:hover', 'property' => 'background-color',
                 ]),
-                'hover_color' => Controls::color('Üzerine gelince yazı', ['selector' => '{{WRAPPER}} .btn:hover']),
-                'radius' => Controls::dimensions('Köşe yuvarlaklığı', 'border-radius', ['selector' => '{{WRAPPER}} .btn']),
-                'typography' => Controls::typography(options: ['selector' => '{{WRAPPER}} .btn']),
-                'btn_padding' => Controls::dimensions('İç boşluk', 'padding', ['selector' => '{{WRAPPER}} .btn']),
+                'hover_color' => Controls::color('Üzerine gelince yazı', ['selector' => '{{WRAPPER}} .btn-el:hover']),
+                'radius' => Controls::dimensions('Köşe yuvarlaklığı', 'border-radius', ['selector' => '{{WRAPPER}} .btn-el']),
+                'typography' => Controls::typography(options: ['selector' => '{{WRAPPER}} .btn-el']),
+                'btn_padding' => Controls::dimensions('İç boşluk', 'padding', ['selector' => '{{WRAPPER}} .btn-el']),
             ]],
         ];
     }

@@ -1,5 +1,22 @@
 <div class="max-w-4xl space-y-4">
 
+    <form wire:submit="installPreset" class="card flex flex-col gap-3 p-4 sm:flex-row sm:items-end">
+        <div class="min-w-0 flex-1">
+            <label for="content-preset" class="label">Hazır modül ekle</label>
+            <select id="content-preset" wire:model="presetKey" class="field @error('presetKey') field-error @enderror">
+                <option value="">Bir modül seçin</option>
+                @foreach ($presets as $key => $preset)
+                    <option value="{{ $key }}">{{ $preset['plural']['tr'] }}</option>
+                @endforeach
+            </select>
+            @error('presetKey') <p class="error">{{ $message }}</p> @enderror
+            <p class="hint">Alanları ve yayın ayarları hazır gelir; kurduktan sonra dilediğiniz gibi değiştirebilirsiniz.</p>
+        </div>
+        <button type="submit" class="btn-primary shrink-0">
+            <x-icon name="plus" class="size-4"/> Modülü ekle
+        </button>
+    </form>
+
     <div class="card-pad">
         <h2 class="text-sm font-semibold text-ink-900">İçerik türü nedir?</h2>
         <p class="mt-1 text-sm text-ink-600">

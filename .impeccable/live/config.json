@@ -1,0 +1,10 @@
+{
+  "files": [
+    "resources/views/layouts/admin.blade.php",
+    "resources/views/layouts/builder.blade.php",
+    "resources/views/components/site-layout.blade.php"
+  ],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true
+}

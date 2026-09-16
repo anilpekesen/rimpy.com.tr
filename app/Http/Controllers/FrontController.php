@@ -104,7 +104,9 @@ class FrontController extends Controller
     /** Arşiv, kategori ve detay adreslerini dener. */
     private function contentRoute(array $segments, string $locale)
     {
-        $type = ContentType::where('is_active', true)->get()
+        // Sınıflandırmalar birlikte yüklenir: kategori adresi çözülürken
+        // ($segments sayısı 3 olduğunda) hemen aşağıda okunuyorlar.
+        $type = ContentType::with('taxonomies')->where('is_active', true)->get()
             ->first(fn (ContentType $t) => $t->prefix($locale) === $segments[0]);
 
         if (! $type) {
@@ -136,7 +138,7 @@ class FrontController extends Controller
 
         // /urunler/bir-urun
         $item = ContentItem::withTranslations()
-            ->with('type', 'featuredImage', 'terms.translations')
+            ->with('type.taxonomies', 'featuredImage', 'terms.translations', 'terms.taxonomy')
             ->where('content_type_id', $type->id)
             ->whereHas('translations', fn ($q) => $q->where('locale', $locale)->where('slug', end($segments)))
             ->first();
@@ -145,35 +147,116 @@ class FrontController extends Controller
             $item->timestamps = false;
             $item->increment('view_count');
 
+            [$previous, $next] = $this->neighbours($item, $type);
+
             return view('front.content', [
                 'item' => $item,
                 'translation' => $item->translation($locale),
                 'type' => $type,
                 'locale' => $locale,
                 'subject' => $item,
+                'previous' => $previous,
+                'next' => $next,
             ]);
         }
 
         return null;
     }
 
+    /**
+     * Listede bu kaydın hemen öncesindeki ve sonrasındaki kayıtlar.
+     *
+     * Sıralama arşivinkiyle aynı (önce yayın tarihi, eşitse kimlik); böylece
+     * oklarla gezinmek listedeki sırayı izler. Katalogda çoğu ürünün yayın
+     * tarihi aynı olduğu için kimlik ikinci ölçüt olarak şart.
+     *
+     * @return array{0: ?ContentItem, 1: ?ContentItem}
+     */
+    private function neighbours(ContentItem $item, ContentType $type): array
+    {
+        $base = fn () => ContentItem::withTranslations()
+            ->with('type')
+            ->where('content_type_id', $type->id)
+            ->whereKeyNot($item->getKey())
+            ->live();
+
+        // Listede bir üstteki: tarihi daha yeni, eşitse kimliği daha büyük.
+        $previous = $base()
+            ->where(fn ($q) => $q
+                ->where('published_at', '>', $item->published_at)
+                ->orWhere(fn ($w) => $w->where('published_at', $item->published_at)->where('id', '>', $item->id)))
+            ->orderBy('published_at')->orderBy('id')
+            ->first();
+
+        $next = $base()
+            ->where(fn ($q) => $q
+                ->where('published_at', '<', $item->published_at)
+                ->orWhere(fn ($w) => $w->where('published_at', $item->published_at)->where('id', '<', $item->id)))
+            ->orderByDesc('published_at')->orderByDesc('id')
+            ->first();
+
+        return [$previous, $next];
+    }
+
     private function archive(ContentType $type, string $locale, ?Term $term = null)
     {
+        $search = trim((string) request('q', ''));
+
         $items = ContentItem::withTranslations()
             ->with('featuredImage', 'type', 'terms.translations')
             ->where('content_type_id', $type->id)
             ->live()
             ->when($term, fn ($q) => $q->whereHas('terms', fn ($t) => $t->where('terms.id', $term->id)))
-            ->orderByDesc('published_at')
-            ->paginate(12);
+            ->when($search !== '', fn ($q) => $this->applySearch($q, $search, $locale))
+            // Kimlik ikinci ölçüt: aynı tarihli yüzlerce kayıt varken tek
+            // ölçütlü sıralama sayfalar arasında kayıt tekrarına ya da
+            // atlanmasına yol açar.
+            ->orderByDesc('published_at')->orderByDesc('id')
+            ->paginate(12)
+            // Sayfa değiştirirken arama terimi kaybolmasın.
+            ->withQueryString();
 
         return view('front.archive', [
             'type' => $type,
             'term' => $term,
             'items' => $items,
             'locale' => $locale,
+            'search' => $search,
             'subject' => null,
         ]);
+    }
+
+    /**
+     * Arşiv içinde arama.
+     *
+     * Başlık ve kısa açıklamanın yanında kullanıcı tanımlı alanlara da bakar;
+     * kataloglarda aranan şey çoğu zaman başlıkta değil, o türe özel bir alanda
+     * durur (stok kodu, model, parça numarası...).
+     *
+     * Numaralar farklı yazımlarla aranıyor (`3128 3025 46`, `3128-3025-46`,
+     * `31283025`). Bu yüzden girilen terimin bir de yalnızca harf ve
+     * rakamlardan oluşan hâli denenir; kayıtlarda her iki biçim de bulunabilir.
+     */
+    private function applySearch($query, string $search, string $locale)
+    {
+        $terms = array_unique(array_filter([
+            $search,
+            preg_replace('/[^\p{L}\p{N}]+/u', '', $search),
+        ], fn (string $t) => mb_strlen($t) >= 2));
+
+        return $query->whereHas('translations', function ($q) use ($terms, $locale) {
+            $q->where('locale', $locale)->where(function ($group) use ($terms) {
+                foreach ($terms as $term) {
+                    // LIKE için joker karakterler kaçırılıyor; kullanıcının
+                    // yazdığı "%" tüm kayıtları getirmemeli.
+                    $like = '%'.addcslashes($term, '%_\\').'%';
+
+                    $group->orWhere('title', 'like', $like)
+                        ->orWhere('excerpt', 'like', $like)
+                        ->orWhere('custom', 'like', $like);
+                }
+            });
+        });
     }
 
     // ── Yönlendirmeler ───────────────────────────────────────────────────

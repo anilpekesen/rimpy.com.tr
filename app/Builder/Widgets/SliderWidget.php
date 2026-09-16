@@ -16,6 +16,11 @@ class SliderWidget extends Widget
     {
         return [
             'content' => ['label' => 'Slaytlar', 'controls' => [
+                'slider_id' => [
+                    'type' => 'slider_select',
+                    'label' => 'Kayıtlı slider',
+                    'description' => 'Seçildiğinde aşağıdaki sayfaya özel slaytların yerine kullanılır.',
+                ],
                 'slides' => Controls::repeater('Slaytlar', [
                     'image' => Controls::media('Arka plan görseli'),
                     'eyebrow' => Controls::text('Üst etiket'),

@@ -23,6 +23,20 @@ class ContentTypes extends Component
 
     public array $form = [];
 
+    public string $presetKey = '';
+
+    /** Sık kullanılan kurumsal modüller için güvenli başlangıç şemaları. */
+    public const PRESETS = [
+        'blog' => ['name' => ['tr' => 'Makale', 'en' => 'Article'], 'plural' => ['tr' => 'Blog', 'en' => 'Blog'], 'icon' => 'newspaper', 'supports' => ['image', 'excerpt', 'body', 'seo', 'taxonomies'], 'fields' => []],
+        'projeler' => ['name' => ['tr' => 'Proje', 'en' => 'Project'], 'plural' => ['tr' => 'Projeler', 'en' => 'Projects'], 'icon' => 'blocks', 'supports' => ['image', 'gallery', 'excerpt', 'body', 'seo', 'taxonomies'], 'fields' => [['key' => 'musteri', 'type' => 'text', 'label' => ['tr' => 'Müşteri', 'en' => 'Client']], ['key' => 'konum', 'type' => 'text', 'label' => ['tr' => 'Konum', 'en' => 'Location']], ['key' => 'yil', 'type' => 'number', 'label' => ['tr' => 'Yıl', 'en' => 'Year']]]],
+        'referanslar' => ['name' => ['tr' => 'Referans', 'en' => 'Reference'], 'plural' => ['tr' => 'Referanslar', 'en' => 'References'], 'icon' => 'users', 'supports' => ['image', 'excerpt', 'seo', 'taxonomies'], 'fields' => [['key' => 'web_adresi', 'type' => 'url', 'label' => ['tr' => 'Web adresi', 'en' => 'Website']], ['key' => 'sektor', 'type' => 'text', 'label' => ['tr' => 'Sektör', 'en' => 'Industry']]]],
+        'ofisler' => ['name' => ['tr' => 'Ofis', 'en' => 'Office'], 'plural' => ['tr' => 'Ofisler', 'en' => 'Offices'], 'icon' => 'blocks', 'supports' => ['image', 'body', 'seo'], 'fields' => [['key' => 'adres', 'type' => 'textarea', 'label' => ['tr' => 'Adres', 'en' => 'Address']], ['key' => 'telefon', 'type' => 'text', 'label' => ['tr' => 'Telefon', 'en' => 'Phone']], ['key' => 'eposta', 'type' => 'text', 'label' => ['tr' => 'E-posta', 'en' => 'Email']], ['key' => 'harita', 'type' => 'url', 'label' => ['tr' => 'Harita bağlantısı', 'en' => 'Map link']]]],
+        'sss' => ['name' => ['tr' => 'Soru', 'en' => 'Question'], 'plural' => ['tr' => 'Sık Sorulan Sorular', 'en' => 'FAQ'], 'icon' => 'file-text', 'supports' => ['body', 'taxonomies', 'seo'], 'fields' => []],
+        'duyurular' => ['name' => ['tr' => 'Duyuru', 'en' => 'Announcement'], 'plural' => ['tr' => 'Duyurular', 'en' => 'Announcements'], 'icon' => 'newspaper', 'supports' => ['image', 'excerpt', 'body', 'seo'], 'fields' => [['key' => 'bitis_tarihi', 'type' => 'date', 'label' => ['tr' => 'Bitiş tarihi', 'en' => 'End date']], ['key' => 'dosya', 'type' => 'file', 'label' => ['tr' => 'Ek dosya', 'en' => 'Attachment']]]],
+        'galeriler' => ['name' => ['tr' => 'Galeri', 'en' => 'Gallery'], 'plural' => ['tr' => 'Galeriler', 'en' => 'Galleries'], 'icon' => 'image', 'supports' => ['image', 'gallery', 'excerpt', 'seo', 'taxonomies'], 'fields' => []],
+        'ekip' => ['name' => ['tr' => 'Ekip üyesi', 'en' => 'Team member'], 'plural' => ['tr' => 'Ekip', 'en' => 'Team'], 'icon' => 'users', 'supports' => ['image', 'body', 'seo'], 'fields' => [['key' => 'gorev', 'type' => 'text', 'label' => ['tr' => 'Görev', 'en' => 'Role']], ['key' => 'eposta', 'type' => 'text', 'label' => ['tr' => 'E-posta', 'en' => 'Email']]]],
+    ];
+
     public const ICONS = [
         'box' => 'Kutu', 'newspaper' => 'Gazete', 'image' => 'Görsel',
         'users' => 'Ekip', 'file-text' => 'Belge', 'blocks' => 'Bloklar',
@@ -82,6 +96,55 @@ class ContentTypes extends Component
             'label' => Locales::map('Yeni alan'),
             'required' => false,
         ];
+    }
+
+    public function installPreset(): void
+    {
+        $preset = self::PRESETS[$this->presetKey] ?? null;
+
+        if (! $preset) {
+            $this->addError('presetKey', 'Eklemek istediğiniz hazır türü seçin.');
+
+            return;
+        }
+
+        if (ContentType::where('key', $this->presetKey)->exists()) {
+            $this->dispatch('notify', message: 'Bu içerik türü zaten kurulu.');
+
+            return;
+        }
+
+        $localized = function (array $values): array {
+            $result = [];
+
+            foreach (Locales::codes() as $code) {
+                $result[$code] = $values[$code] ?? $values['tr'] ?? reset($values);
+            }
+
+            return $result;
+        };
+
+        $fields = collect($preset['fields'])->map(function (array $field) use ($localized): array {
+            return array_replace($field, [
+                'required' => false,
+                'label' => $localized($field['label']),
+            ]);
+        })->all();
+
+        $this->editingId = null;
+        $this->form = [
+            'key' => $this->presetKey,
+            'name' => $localized($preset['name']),
+            'plural' => $localized($preset['plural']),
+            'route_prefix' => $localized(array_map(fn ($label) => Str::slug($label), $preset['plural'])),
+            'icon' => $preset['icon'],
+            'has_archive' => true,
+            'supports' => $preset['supports'],
+            'fields' => $fields,
+        ];
+
+        $this->save();
+        $this->presetKey = '';
     }
 
     public function removeField(int $index): void
@@ -195,6 +258,7 @@ class ContentTypes extends Component
             'types' => ContentType::with('taxonomies')->withCount('items')->orderBy('sort')->get(),
             'icons' => self::ICONS,
             'supportOptions' => self::SUPPORTS,
+            'presets' => self::PRESETS,
             'locales' => Locales::all(),
         ])->title('İçerik türleri');
     }

@@ -2,9 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Builder\Tree;
 use App\Livewire\Builder\Editor;
+use App\Livewire\MediaPicker;
+use App\Models\Media;
 use App\Models\Page;
+use App\Models\Setting;
+use App\Models\Slide;
+use App\Models\Slider;
 use App\Models\User;
+use App\Support\Theme;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -210,8 +217,8 @@ class BuilderTest extends TestCase
         $this->assertStringContainsString('var(--c-primary)', $css);
 
         // Palet değişince derlenmiş CSS'e dokunmadan site güncellenmeli.
-        \App\Models\Setting::putGroup('theme', array_replace_recursive(
-            \App\Support\Theme::DEFAULTS,
+        Setting::putGroup('theme', array_replace_recursive(
+            Theme::DEFAULTS,
             ['colors' => ['primary' => '#e11d48']]
         ));
 
@@ -243,7 +250,7 @@ class BuilderTest extends TestCase
 
     private function rowsOf($component, string $widgetId, string $key): array
     {
-        foreach (\App\Builder\Tree::fromArray(['elements' => $component->get('tree')])->flatten() as $element) {
+        foreach (Tree::fromArray(['elements' => $component->get('tree')])->flatten() as $element) {
             if ($element->id === $widgetId) {
                 return $element->setting($key, []);
             }
@@ -334,5 +341,124 @@ class BuilderTest extends TestCase
             substr_count($html, '"@type":"FAQPage"'),
             'Sayfada birden fazla SSS bildirimi basıldı.'
         );
+    }
+
+    public function test_gorsel_secici_panelde_ve_kurucuda_yuklenir(): void
+    {
+        $media = Media::create([
+            'disk' => 'public',
+            'path' => 'media/test.jpg',
+            'filename' => 'test.jpg',
+            'original_name' => 'test.jpg',
+            'type' => 'image',
+            'mime' => 'image/jpeg',
+            'extension' => 'jpg',
+            'size' => 100,
+            'hash' => hash('sha256', 'test-image'),
+            'alt' => ['tr' => 'Test görseli'],
+            'title' => ['tr' => 'Test'],
+        ]);
+
+        Livewire::actingAs($this->owner)
+            ->test(MediaPicker::class)
+            ->dispatch('open-media-picker', target: 'image', accept: 'image')
+            ->assertSet('isOpen', true)
+            ->assertSee('test.jpg')
+            ->call('choose', $media->id)
+            ->assertDispatched('media-selected')
+            ->assertSet('isOpen', false);
+    }
+
+    public function test_kayitli_slider_sayfa_kurucuda_gosterilir(): void
+    {
+        $media = Media::create([
+            'disk' => 'public', 'path' => 'media/hero.jpg', 'filename' => 'hero.jpg',
+            'original_name' => 'hero.jpg', 'type' => 'image', 'mime' => 'image/jpeg',
+            'extension' => 'jpg', 'size' => 100, 'hash' => hash('sha256', 'hero-image'),
+            'alt' => ['tr' => 'Fabrika'], 'title' => ['tr' => 'Fabrika'],
+        ]);
+        $slider = Slider::create(['name' => 'Ana sayfa', 'key' => 'ana-sayfa']);
+        Slide::create([
+            'slider_id' => $slider->id,
+            'image_id' => $media->id,
+            'title' => ['tr' => 'Üretimde güçlü çözüm'],
+            'text' => ['tr' => 'Deneyimli ekip, güvenilir üretim.'],
+            'sort' => 0,
+        ]);
+
+        $component = Livewire::actingAs($this->owner)
+            ->test(Editor::class, ['page' => $this->page])
+            ->call('addSection', [100]);
+
+        $columnId = $component->get('tree')[0]['elements'][0]['id'];
+        $component->call('selectElement', $columnId)->call('addWidget', 'slider');
+        $widgetId = $component->get('tree')[0]['elements'][0]['elements'][0]['id'];
+
+        $component->call('selectElement', $widgetId)
+            ->call('setSetting', 'slider_id', $slider->id, false)
+            ->call('save');
+
+        $this->get('/')->assertOk()->assertSee('Üretimde güçlü çözüm');
+    }
+
+    /**
+     * Kaydedilmiş bir sayfa yeniden açıldığında eleman seçilebilmeli.
+     *
+     * `Element::toArray()` ayarları bilinçli olarak nesneye çevirir — boş ayar
+     * kümesi JSON'a `[]` değil `{}` yazılsın diye. Düzenleyici ise ayarlara
+     * dizi gibi erişir; ağaç yüklenirken düz diziye indirgenmezse ilk seçimde
+     * "Cannot use object of type stdClass as array" hatası alınıyordu.
+     */
+    public function test_kaydedilmis_sayfada_eleman_secilebilir(): void
+    {
+        Livewire::actingAs($this->owner)
+            ->test(Editor::class, ['page' => $this->page])
+            ->call('addSection', [100])
+            ->call('addWidget', 'heading')
+            ->call('save');
+
+        $component = Livewire::actingAs($this->owner)
+            ->test(Editor::class, ['page' => $this->page->fresh()]);
+
+        $tree = $component->get('tree');
+
+        $this->assertNotEmpty($tree, 'Kaydedilen tasarım geri yüklenmeliydi.');
+        $this->assertIsArray($tree[0]['settings'], 'Ayarlar düz dizi olmalı.');
+
+        // Ayar panelinin çizilmesi bu çağrıyla tetikleniyor.
+        $component->call('selectElement', $tree[0]['id'])->assertOk();
+    }
+
+    public function test_onizleme_kaydedilmemis_agaci_sitenin_duzeniyle_cizer(): void
+    {
+        $component = Livewire::actingAs($this->owner)
+            ->test(Editor::class, ['page' => $this->page])
+            ->call('addSection', [100])
+            ->call('addWidget', 'heading');
+
+        preg_match('#/kurucu/onizleme/([a-f0-9]{40})#', $component->html(), $match);
+        $this->assertNotEmpty($match, 'Düzenleyici önizleme adresini basmalı.');
+
+        $response = $this->actingAs($this->owner)->get(route('admin.builder.preview', $match[1]));
+
+        $response->assertOk()
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertSee('data-el-type="section"', false)
+            ->assertSee('data-el-label="Başlık"', false)
+            ->assertSee('builder-preview', false);
+    }
+
+    public function test_onizleme_baska_kullaniciya_acilmaz(): void
+    {
+        $component = Livewire::actingAs($this->owner)
+            ->test(Editor::class, ['page' => $this->page])
+            ->call('addSection', [100]);
+
+        preg_match('#/kurucu/onizleme/([a-f0-9]{40})#', $component->html(), $match);
+
+        $other = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($other)->get(route('admin.builder.preview', $match[1]))->assertNotFound();
+        $this->actingAs($this->owner)->get(route('admin.builder.preview', str_repeat('a', 40)))->assertNotFound();
     }
 }
