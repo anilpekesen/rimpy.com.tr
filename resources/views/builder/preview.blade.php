@@ -10,17 +10,17 @@
     @push('styles')
         <style>{!! $css !!}</style>
         <style>
-            [data-el].pv-hover { outline: 2px dashed #2563eb; outline-offset: -2px; cursor: pointer; }
-            [data-el].pv-selected { outline: 3px solid #2563eb; outline-offset: -3px; }
+            [data-el].pv-hover { outline: 2px dashed var(--c-primary, #2563eb); outline-offset: -2px; cursor: pointer; }
+            [data-el].pv-selected { outline: 3px solid var(--c-primary, #2563eb); outline-offset: -3px; }
             .pv-tag {
                 position: fixed; z-index: 2147483000; pointer-events: none;
                 padding: 4px 8px; border-radius: 4px 4px 0 0;
-                background: #2563eb; color: #fff;
+                background: var(--c-primary, #2563eb); color: #fff;
                 font: 700 12px/1 system-ui, sans-serif; white-space: nowrap;
                 transform: translateY(-100%);
             }
             .pv-tag[hidden] { display: none; }
-            .pv-tag--selected { background: #fff; color: #2563eb; box-shadow: inset 0 0 0 2px #2563eb; }
+            .pv-tag--selected { background: #fff; color: var(--c-primary, #2563eb); box-shadow: inset 0 0 0 2px var(--c-primary, #2563eb); }
         </style>
     @endpush
 
