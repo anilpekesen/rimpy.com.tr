@@ -1,0 +1,943 @@
+{
+  "kategoriler": [
+    {
+      "slug": "tork-aletleri",
+      "ad": "Tork Aletleri",
+      "en": "Torque Tools",
+      "alt": [
+        {
+          "slug": "hidrolik-tork-anahtarlari",
+          "ad": "Hidrolik Tork Anahtarları",
+          "en": "Hydraulic Torque Wrenches"
+        },
+        {
+          "slug": "elektrikli-tork-anahtarlari",
+          "ad": "Elektrikli ve Akülü Tork Anahtarları",
+          "en": "Electric & Battery Torque Wrenches"
+        },
+        {
+          "slug": "tork-carpanlari",
+          "ad": "Tork Çarpanları",
+          "en": "Torque Multipliers"
+        },
+        {
+          "slug": "civata-gerdirme",
+          "ad": "Cıvata Gerdirme",
+          "en": "Bolt Tensioners"
+        },
+        {
+          "slug": "darbe-lokmalari",
+          "ad": "Ağır Hizmet Darbe Lokmaları",
+          "en": "Heavy Duty Impact Sockets"
+        }
+      ]
+    },
+    {
+      "slug": "yuksek-basinc-hidrolik",
+      "ad": "Yüksek Basınç Hidrolik",
+      "en": "High Pressure Hydraulics",
+      "alt": [
+        {
+          "slug": "hidrolik-silindirler",
+          "ad": "Hidrolik Silindirler",
+          "en": "Hydraulic Cylinders"
+        },
+        {
+          "slug": "hidrolik-pompalar",
+          "ad": "Hidrolik Pompalar",
+          "en": "Hydraulic Pumps"
+        },
+        {
+          "slug": "hortum-ve-baglanti",
+          "ad": "Hortum ve Bağlantı Elemanları",
+          "en": "Hoses & Couplers"
+        },
+        {
+          "slug": "hidrolik-krikolar",
+          "ad": "Hidrolik Krikolar",
+          "en": "Hydraulic Jacks"
+        }
+      ]
+    },
+    {
+      "slug": "endustriyel-ekipman",
+      "ad": "Endüstriyel Ekipman",
+      "en": "Industrial Equipment",
+      "alt": [
+        {
+          "slug": "flans-aletleri",
+          "ad": "Flanş Ayırma ve Hizalama",
+          "en": "Flange Spreaders & Alignment"
+        },
+        {
+          "slug": "cektirmeler",
+          "ad": "Hidrolik Çektirmeler",
+          "en": "Hydraulic Pullers"
+        },
+        {
+          "slug": "somun-kesiciler",
+          "ad": "Somun Kesiciler",
+          "en": "Nut Splitters"
+        },
+        {
+          "slug": "test-pompalari",
+          "ad": "Hidrostatik Test Pompaları",
+          "en": "Hydrostatic Test Pumps"
+        }
+      ]
+    }
+  ],
+  "urunler": [
+    {
+      "kod": "RHT-08",
+      "kategori": "hidrolik-tork-anahtarlari",
+      "one_cikan": true,
+      "rozet": "Çok satan",
+      "ad": "Kare Tahrikli Hidrolik Tork Anahtarı",
+      "en": "Square Drive Hydraulic Torque Wrench",
+      "kisa": "Hafif alüminyum-titanyum alaşım gövde, 360°×185° döner hortum mafsalı, 360° ayarlanabilir reaksiyon kolu ve 1½\" kare tahrik. M30–M64 cıvatalarda ±%3 tekrarlanabilir tork.",
+      "en_kisa": "Lightweight aluminium-titanium alloy housing, 360°×185° swivel hose manifold, 360° adjustable reaction arm and 1½\" square drive. Repeatable torque within ±3% on M30–M64 bolts.",
+      "ozellikler": [
+        [
+          "Maks. tork",
+          "10.780 N·m"
+        ],
+        [
+          "Min. tork",
+          "1.078 N·m"
+        ],
+        [
+          "Cıvata aralığı",
+          "M30 – M64"
+        ],
+        [
+          "Kare tahrik",
+          "1½\""
+        ],
+        [
+          "Çalışma basıncı",
+          "700 bar"
+        ],
+        [
+          "Ağırlık",
+          "11 kg"
+        ],
+        [
+          "Hassasiyet",
+          "±%3"
+        ]
+      ],
+      "gorsel": "a compact square-drive hydraulic torque wrench: monoblock machined aluminium body in matt black, a 1.5 inch square drive protruding from the side, a hinged reaction arm, a twin swivel hose manifold on top with two short high-pressure hose stubs"
+    },
+    {
+      "kod": "RHT-20",
+      "kategori": "hidrolik-tork-anahtarlari",
+      "ad": "Kare Tahrikli Hidrolik Tork Anahtarı, Ağır Seri",
+      "en": "Square Drive Hydraulic Torque Wrench, Heavy Series",
+      "kisa": "M42–M90 cıvatalar için yüksek tork kapasitesi. Alüminyum-titanyum alaşım gövde, 360° ayarlanabilir reaksiyon kolu ve 360°×185° döner hortum mafsalı.",
+      "en_kisa": "High torque capacity for M42–M90 bolts. Aluminium-titanium alloy housing, 360° adjustable reaction arm and 360°×185° swivel hose manifold.",
+      "ozellikler": [
+        [
+          "Maks. tork",
+          "26.664 N·m"
+        ],
+        [
+          "Min. tork",
+          "2.666 N·m"
+        ],
+        [
+          "Cıvata aralığı",
+          "M42 – M90"
+        ],
+        [
+          "Kare tahrik",
+          "2½\""
+        ],
+        [
+          "Çalışma basıncı",
+          "700 bar"
+        ],
+        [
+          "Ağırlık",
+          "26,5 kg"
+        ],
+        [
+          "Hassasiyet",
+          "±%3"
+        ]
+      ],
+      "gorsel": "a large heavy-series square-drive hydraulic torque wrench, bulky machined steel and matt black aluminium body, oversized 2.5 inch square drive, thick reinforced reaction arm resting on the surface, swivel hose manifold on top"
+    },
+    {
+      "kod": "RLP-36",
+      "kategori": "hidrolik-tork-anahtarlari",
+      "rozet": "Dar alan",
+      "ad": "Düşük Profilli Kaset Tork Anahtarı",
+      "en": "Low Profile Cassette Torque Wrench",
+      "kisa": "Altıgen kaset başlığı sayesinde lokma sığmayan dar flanşlarda çalışır. Kaset değiştirerek farklı somun ölçülerine uyum.",
+      "en_kisa": "The hexagon cassette head works on tight flanges where a socket will not fit. Swap cassettes to cover different nut sizes.",
+      "ozellikler": [
+        [
+          "Maks. tork",
+          "8.900 N·m"
+        ],
+        [
+          "Altıgen aralığı",
+          "41–95 mm"
+        ],
+        [
+          "Başlık yüksekliği",
+          "38 mm"
+        ],
+        [
+          "Çalışma basıncı",
+          "700 bar"
+        ],
+        [
+          "Ağırlık",
+          "6,2 kg"
+        ],
+        [
+          "Hassasiyet",
+          "±%3"
+        ]
+      ],
+      "gorsel": "a low-profile hydraulic cassette torque wrench: slim flat elongated body with an open hexagon ratchet cassette head at the front, a compact matt black power cylinder at the rear, short swivel hose coupling, very thin profile seen from three-quarter view"
+    },
+    {
+      "kod": "RET-35",
+      "kategori": "elektrikli-tork-anahtarlari",
+      "one_cikan": true,
+      "rozet": "Yeni",
+      "ad": "Elektrikli Tork Anahtarı, Dijital Ekranlı",
+      "en": "Electric Torque Wrench, Digital Display",
+      "kisa": "Kapalı devre tork kontrolü, renkli ekran ve sıkma kayıtlarının USB ile aktarımı. Kalibrasyon sertifikası ile teslim.",
+      "en_kisa": "Closed-loop torque control, colour display and USB export of every tightening record. Supplied with a calibration certificate.",
+      "ozellikler": [
+        [
+          "Maks. tork",
+          "3.500 N·m"
+        ],
+        [
+          "Kare tahrik",
+          "1\""
+        ],
+        [
+          "Besleme",
+          "230 V"
+        ],
+        [
+          "Hız",
+          "6 dev/dk"
+        ],
+        [
+          "Ağırlık",
+          "11,5 kg"
+        ],
+        [
+          "Hassasiyet",
+          "±%3"
+        ]
+      ],
+      "gorsel": "an industrial electric torque wrench: cylindrical gearbox housing in machined steel, pistol-style matt black handle with a small dark digital display, a reaction arm bracket at the front, 1 inch square drive, coiled power cable"
+    },
+    {
+      "kod": "RBT-27",
+      "kategori": "elektrikli-tork-anahtarlari",
+      "ad": "Akülü Tork Anahtarı 36 V",
+      "en": "Battery Torque Wrench 36 V",
+      "kisa": "Kablosuz saha çalışması için 36 V akü, iki kademeli hız ve otomatik kapanma. Rüzgar türbini ve kule bakımları için hafif çözüm.",
+      "en_kisa": "36 V battery for cordless field work, two speed settings and auto shut-off. A light solution for wind turbine and tower maintenance.",
+      "ozellikler": [
+        [
+          "Maks. tork",
+          "2.700 N·m"
+        ],
+        [
+          "Kare tahrik",
+          "¾\""
+        ],
+        [
+          "Akü",
+          "36 V / 5 Ah"
+        ],
+        [
+          "Sıkma / akü",
+          "≈ 250"
+        ],
+        [
+          "Ağırlık",
+          "7,8 kg"
+        ],
+        [
+          "Hassasiyet",
+          "±%5"
+        ]
+      ],
+      "gorsel": "a cordless battery-powered industrial torque wrench: long cylindrical planetary gearbox in machined steel, matt black grip with a slide-in battery pack at the base, reaction arm at the nose, 3/4 inch square drive"
+    },
+    {
+      "kod": "RTM-125",
+      "kategori": "tork-carpanlari",
+      "ad": "Tork Çarpanı, Reaksiyon Kollu",
+      "en": "Torque Multiplier with Reaction Arm",
+      "kisa": "1:125 dişli oranı ile küçük bir manuel tork anahtarından yüksek çıkış torku. Elektrik ve hava olmayan sahalar için.",
+      "en_kisa": "A 1:125 gear ratio turns a small manual torque wrench into high output torque. For sites without power or air.",
+      "ozellikler": [
+        [
+          "Oran",
+          "1:125"
+        ],
+        [
+          "Maks. çıkış",
+          "16.000 N·m"
+        ],
+        [
+          "Giriş",
+          "½\""
+        ],
+        [
+          "Çıkış",
+          "1½\""
+        ],
+        [
+          "Ağırlık",
+          "14,2 kg"
+        ],
+        [
+          "Hassasiyet",
+          "±%5"
+        ]
+      ],
+      "gorsel": "a manual torque multiplier: cylindrical planetary gearbox drum in machined steel, a long flat reaction arm extending sideways, 1/2 inch square input on top, 1.5 inch square output below"
+    },
+    {
+      "kod": "RBT-M48",
+      "kategori": "civata-gerdirme",
+      "rozet": "1.500 bar",
+      "ad": "Hidrolik Cıvata Gerdirme Aleti",
+      "en": "Hydraulic Bolt Tensioner",
+      "kisa": "Cıvatayı burulmadan, eksenel olarak gerdirir. Birden fazla gerdirme aleti tek pompaya bağlanarak flanşın eşit yüklenmesi sağlanır.",
+      "en_kisa": "Stretches the bolt axially without torsion. Several tensioners on one pump load the flange evenly.",
+      "ozellikler": [
+        [
+          "Cıvata",
+          "M48"
+        ],
+        [
+          "Maks. yük",
+          "1.020 kN"
+        ],
+        [
+          "Çalışma basıncı",
+          "1.500 bar"
+        ],
+        [
+          "Strok",
+          "12 mm"
+        ],
+        [
+          "Ağırlık",
+          "5,6 kg"
+        ],
+        [
+          "Kullanım",
+          "Flanş, kule"
+        ]
+      ],
+      "gorsel": "a hydraulic bolt tensioner: stacked cylindrical tool made of a machined steel load cell, a bridge with a side window showing a hex nut, a top puller nut, a single high-pressure coupler on the side"
+    },
+    {
+      "kod": "RIS-SET",
+      "kategori": "darbe-lokmalari",
+      "ad": "Ağır Hizmet Darbe Lokma Seti, 1½\"",
+      "en": "Heavy Duty Impact Socket Set, 1½\"",
+      "kisa": "Krom-molibden çelik, fosfat kaplı darbe lokmaları. Hidrolik tork anahtarlarıyla birlikte 46–95 mm aralığında 9 parça.",
+      "en_kisa": "Chrome-molybdenum steel impact sockets with phosphate finish. Nine pieces from 46 to 95 mm for hydraulic torque wrenches.",
+      "ozellikler": [
+        [
+          "Tahrik",
+          "1½\""
+        ],
+        [
+          "Ölçü aralığı",
+          "46–95 mm"
+        ],
+        [
+          "Parça",
+          "9"
+        ],
+        [
+          "Malzeme",
+          "Cr-Mo"
+        ],
+        [
+          "Kaplama",
+          "Fosfat"
+        ],
+        [
+          "Standart",
+          "DIN 3129"
+        ]
+      ],
+      "gorsel": "a set of nine heavy-duty impact sockets in graduated sizes, matt black phosphate finish, arranged in a precise row in a fitted foam tray, each socket with crisp hexagon interior"
+    },
+    {
+      "kod": "RSC-5013",
+      "kategori": "hidrolik-silindirler",
+      "one_cikan": true,
+      "ad": "Tek Etkili Hidrolik Silindir",
+      "en": "Single Acting Hydraulic Cylinder",
+      "kisa": "Yay geri dönüşlü, sertleştirilmiş krom pistonlu genel amaçlı silindir. Kaldırma, itme, presleme ve hizalama işleri için.",
+      "en_kisa": "General purpose cylinder with spring return and hardened chrome plunger. For lifting, pushing, pressing and alignment.",
+      "ozellikler": [
+        [
+          "Kapasite",
+          "50 t"
+        ],
+        [
+          "Strok",
+          "133 mm"
+        ],
+        [
+          "Kapalı yükseklik",
+          "243 mm"
+        ],
+        [
+          "Çalışma basıncı",
+          "700 bar"
+        ],
+        [
+          "Yağ hacmi",
+          "945 cm³"
+        ],
+        [
+          "Ağırlık",
+          "16 kg"
+        ]
+      ],
+      "gorsel": "a single-acting hydraulic cylinder standing upright: thick machined steel barrel with a matt black coat, polished chrome plunger slightly extended with a grooved saddle on top, a coupler half on the side near the base"
+    },
+    {
+      "kod": "RSC-LP100",
+      "kategori": "hidrolik-silindirler",
+      "rozet": "Kısa boy",
+      "ad": "Düşük Yükseklikli Silindir",
+      "en": "Low Height Cylinder",
+      "kisa": "Sadece 57 mm kapalı yükseklik ile makine altı ve dar boşluklarda kaldırma. Somun tipi kilitleme seçeneği.",
+      "en_kisa": "Only 57 mm collapsed height for lifting under machinery and in tight gaps. Lock nut option available.",
+      "ozellikler": [
+        [
+          "Kapasite",
+          "100 t"
+        ],
+        [
+          "Strok",
+          "16 mm"
+        ],
+        [
+          "Kapalı yükseklik",
+          "57 mm"
+        ],
+        [
+          "Çalışma basıncı",
+          "700 bar"
+        ],
+        [
+          "Gövde",
+          "Çelik"
+        ],
+        [
+          "Ağırlık",
+          "9,8 kg"
+        ],
+        [
+          "Yağ hacmi",
+          "229 cm³"
+        ]
+      ],
+      "gorsel": "a very flat low-height hydraulic pancake cylinder: wide short machined steel puck shape, matt black side, a thin chrome plunger face on top, small coupler on the side"
+    },
+    {
+      "kod": "RSC-DA200",
+      "kategori": "hidrolik-silindirler",
+      "ad": "Çift Etkili Ağır Hizmet Silindiri",
+      "en": "Double Acting Heavy Duty Cylinder",
+      "kisa": "Hidrolik geri dönüş, köprü ve bina kaldırma gibi senkron uygulamalar için iki bağlantı portu ve emniyet valfi.",
+      "en_kisa": "Hydraulic return, two ports and a safety valve for synchronous applications such as bridge and building lifting.",
+      "ozellikler": [
+        [
+          "Kapasite",
+          "200 t"
+        ],
+        [
+          "Strok",
+          "150 mm"
+        ],
+        [
+          "Kapalı yükseklik",
+          "353 mm"
+        ],
+        [
+          "Çalışma basıncı",
+          "700 bar"
+        ],
+        [
+          "Port",
+          "2 × 3/8\" NPTF"
+        ],
+        [
+          "Ağırlık",
+          "63 kg"
+        ],
+        [
+          "Yağ hacmi",
+          "4.290 cm³"
+        ]
+      ],
+      "gorsel": "a massive double-acting hydraulic cylinder, very wide machined steel barrel in matt black with two hose couplers on the side, chrome plunger with a tilt saddle, standing on a steel plate"
+    },
+    {
+      "kod": "RPE-554",
+      "kategori": "hidrolik-pompalar",
+      "one_cikan": true,
+      "rozet": "Stokta",
+      "ad": "Elektrikli Hidrolik Pompa, 4/3 Valfli",
+      "en": "Electric Hydraulic Pump, 4/3 Valve",
+      "kisa": "İki kademeli akış, uzaktan kumandalı 4/3 yön valfi ve 10 litre çelik tank. Tork anahtarı ve çift etkili silindirler için.",
+      "en_kisa": "Two-stage flow, remote-controlled 4/3 directional valve and a 10 litre steel tank. For torque wrenches and double-acting cylinders.",
+      "ozellikler": [
+        [
+          "Basınç",
+          "700 bar"
+        ],
+        [
+          "Tank",
+          "10 L"
+        ],
+        [
+          "Motor",
+          "1,1 kW"
+        ],
+        [
+          "Debi (yüksek bas.)",
+          "0,8 L/dk"
+        ],
+        [
+          "Valf",
+          "4/3 manuel"
+        ],
+        [
+          "Ağırlık",
+          "38 kg"
+        ],
+        [
+          "Kullanılabilir yağ",
+          "8.000 cm³"
+        ]
+      ],
+      "gorsel": "an electric hydraulic power pack: rectangular steel oil reservoir, an electric motor mounted on top with a protective roll cage frame in matt black, a glycerin pressure gauge with a black dial, a manual 4-way valve lever, two hose couplers"
+    },
+    {
+      "kod": "RPH-392",
+      "kategori": "hidrolik-pompalar",
+      "muadil": [
+        "Enerpac P-392"
+      ],
+      "ad": "İki Kademeli El Pompası",
+      "en": "Two Speed Hand Pump",
+      "kisa": "Düşük basınçta hızlı yaklaşma, yüksek basınçta hassas kontrol. Hafif alüminyum tank, kilitli kol.",
+      "en_kisa": "Fast approach at low pressure, precise control at high pressure. Lightweight aluminium reservoir and lockable handle.",
+      "ozellikler": [
+        [
+          "Basınç",
+          "700 bar"
+        ],
+        [
+          "Kullanılabilir yağ",
+          "901 cm³"
+        ],
+        [
+          "Kademe",
+          "2"
+        ],
+        [
+          "Kol kuvveti",
+          "38 kg"
+        ],
+        [
+          "Gövde",
+          "Alüminyum"
+        ],
+        [
+          "Ağırlık",
+          "7,7 kg"
+        ]
+      ],
+      "gorsel": "a two-speed hydraulic hand pump: long horizontal cylindrical aluminium reservoir, a tall pivoting pump handle raised at an angle, a release valve knob, a short hose with a coupler at the end"
+    },
+    {
+      "kod": "RPA-700",
+      "kategori": "hidrolik-pompalar",
+      "ad": "Havalı Ayak Pompası",
+      "en": "Air Driven Foot Pump",
+      "kisa": "Atölye hava hattından çalışır, ayakla kontrol edilen basınç ve tahliye. Elleri serbest bırakan tasarım.",
+      "en_kisa": "Runs on the workshop air line, with pressure and release controlled by foot. Keeps both hands free.",
+      "ozellikler": [
+        [
+          "Basınç",
+          "700 bar"
+        ],
+        [
+          "Hava basıncı",
+          "4–8 bar"
+        ],
+        [
+          "Tank",
+          "1 L"
+        ],
+        [
+          "Kontrol",
+          "Ayak pedalı"
+        ],
+        [
+          "Gövde",
+          "Kompozit"
+        ],
+        [
+          "Ağırlık",
+          "10 kg"
+        ],
+        [
+          "Kullanılabilir yağ",
+          "820 cm³"
+        ]
+      ],
+      "gorsel": "an air-driven hydraulic foot pump: low flat body lying on the floor with a wide foot pedal, an air inlet fitting, a pressure gauge, a short high-pressure hose"
+    },
+    {
+      "kod": "RHC-7206",
+      "kategori": "hortum-ve-baglanti",
+      "ad": "Yüksek Basınç Hortumu, Kaplinli",
+      "en": "High Pressure Hose with Couplers",
+      "kisa": "Termoplastik, 4:1 emniyet katsayılı hidrolik hortum. Bir ucunda dişi kaplin, diğer ucunda erkek kaplin.",
+      "en_kisa": "Thermoplastic hydraulic hose with a 4:1 safety factor. Female coupler on one end, male coupler on the other.",
+      "ozellikler": [
+        [
+          "Uzunluk",
+          "1,8 m"
+        ],
+        [
+          "İç çap",
+          "6,4 mm"
+        ],
+        [
+          "Basınç",
+          "700 bar"
+        ],
+        [
+          "Bağlantı",
+          "3/8\" NPTF"
+        ],
+        [
+          "Malzeme",
+          "Termoplastik"
+        ],
+        [
+          "Emniyet",
+          "4:1"
+        ]
+      ],
+      "gorsel": "a coiled black thermoplastic high-pressure hydraulic hose forming a loose loop, machined steel couplers at both ends with knurled collars"
+    },
+    {
+      "kod": "RGA-63",
+      "kategori": "hortum-ve-baglanti",
+      "ad": "Manometre Adaptörü ve Gliserinli Manometre",
+      "en": "Gauge Adaptor with Glycerin Gauge",
+      "kisa": "Sistem basıncını hat üzerinde izlemek için. 63 mm gliserinli manometre, ton ve bar skalalı kadran.",
+      "en_kisa": "Monitors system pressure in line. 63 mm glycerin-filled gauge with ton and bar scale.",
+      "ozellikler": [
+        [
+          "Kadran",
+          "63 mm"
+        ],
+        [
+          "Aralık",
+          "0–1.000 bar"
+        ],
+        [
+          "Dolgu",
+          "Gliserin"
+        ],
+        [
+          "Bağlantı",
+          "1/4\" NPTF"
+        ],
+        [
+          "Doğruluk",
+          "Sınıf 1,6"
+        ],
+        [
+          "Gövde",
+          "Paslanmaz"
+        ]
+      ],
+      "gorsel": "a hydraulic pressure gauge mounted on a machined steel tee adaptor block, round glycerin-filled gauge with a stainless rim and a matte black dial with fine tick marks, no readable numbers"
+    },
+    {
+      "kod": "RJK-30",
+      "kategori": "hidrolik-krikolar",
+      "ad": "Hidrolik Şişe Kriko",
+      "en": "Hydraulic Bottle Jack",
+      "kisa": "Entegre pompa ve rezervuarlı, kendi kendine yeten kaldırma ünitesi. Bakım atölyeleri ve saha kaldırmaları için.",
+      "en_kisa": "Self-contained lifting unit with integrated pump and reservoir. For maintenance workshops and site lifting.",
+      "ozellikler": [
+        [
+          "Kapasite",
+          "30 t"
+        ],
+        [
+          "Strok",
+          "150 mm"
+        ],
+        [
+          "Min. yükseklik",
+          "244 mm"
+        ],
+        [
+          "Gövde",
+          "Çelik"
+        ],
+        [
+          "Kaldırma kolu",
+          "Var"
+        ],
+        [
+          "Ağırlık",
+          "17 kg"
+        ]
+      ],
+      "gorsel": "a heavy industrial hydraulic bottle jack: square steel base, cylindrical body in matt black, chrome ram with a ridged saddle, a pump socket on the side and a detachable steel lever lying next to it"
+    },
+    {
+      "kod": "RFS-14",
+      "kategori": "flans-aletleri",
+      "one_cikan": true,
+      "ad": "Hidrolik Flanş Ayırıcı Kama",
+      "en": "Hydraulic Wedge Flange Spreader",
+      "kisa": "Kademeli kama ile 6 mm'lik boşluğa girip flanşları 81 mm'ye kadar açar. Conta değişimleri ve vana bakımları için.",
+      "en_kisa": "The stepped wedge enters a 6 mm gap and spreads flanges up to 81 mm. For gasket changes and valve maintenance.",
+      "ozellikler": [
+        [
+          "Ayırma kuvveti",
+          "14 t"
+        ],
+        [
+          "Uç boşluğu",
+          "6 mm"
+        ],
+        [
+          "Maks. açılma",
+          "81 mm"
+        ],
+        [
+          "Çalışma basıncı",
+          "700 bar"
+        ],
+        [
+          "Kademe",
+          "4"
+        ],
+        [
+          "Ağırlık",
+          "4,3 kg"
+        ]
+      ],
+      "gorsel": "a hydraulic wedge flange spreader: compact steel cylinder body with a stepped wedge jaw at the front made of hardened steel, a safety block, a coupler at the rear"
+    },
+    {
+      "kod": "RFA-10",
+      "kategori": "flans-aletleri",
+      "ad": "Hidrolik Flanş Hizalama Aleti",
+      "en": "Hydraulic Flange Alignment Tool",
+      "kisa": "Kaçık flanşları radyal yönde ±10 mm'ye kadar hizalar. Cıvata deliğine geçen kanca ile tek kişi kullanımı.",
+      "en_kisa": "Aligns misaligned flanges radially by up to ±10 mm. The hook passes through the bolt hole for one-person operation.",
+      "ozellikler": [
+        [
+          "Hizalama kuvveti",
+          "10 t"
+        ],
+        [
+          "Düzeltme",
+          "±10 mm"
+        ],
+        [
+          "Cıvata deliği",
+          "≥ 22 mm"
+        ],
+        [
+          "Çalışma basıncı",
+          "700 bar"
+        ],
+        [
+          "Gövde",
+          "Çelik"
+        ],
+        [
+          "Ağırlık",
+          "9 kg"
+        ]
+      ],
+      "gorsel": "a hydraulic flange alignment tool: an L-shaped hardened steel hook frame with a small hydraulic cylinder mounted on it, a coupler, lying next to two thick steel pipe flanges slightly misaligned"
+    },
+    {
+      "kod": "RPL-303",
+      "kategori": "cektirmeler",
+      "ad": "Hidrolik Çektirme, 3 Kollu",
+      "en": "Hydraulic Puller, 3 Jaw",
+      "kisa": "Rulman, dişli ve kasnak sökümü için kendinden pompalı hidrolik çektirme. Kollar tek hareketle eşit açılır.",
+      "en_kisa": "Self-contained hydraulic puller for removing bearings, gears and pulleys. The jaws open evenly in one movement.",
+      "ozellikler": [
+        [
+          "Kapasite",
+          "30 t"
+        ],
+        [
+          "Maks. açıklık",
+          "380 mm"
+        ],
+        [
+          "Erişim",
+          "300 mm"
+        ],
+        [
+          "Kol sayısı",
+          "3"
+        ],
+        [
+          "Pompa",
+          "Entegre"
+        ],
+        [
+          "Ağırlık",
+          "24 kg"
+        ]
+      ],
+      "gorsel": "a three-jaw hydraulic gear puller: a central hydraulic cylinder with a long chrome spindle, three hinged forged steel jaws in matt black spread evenly around a steel hub, an integrated hand pump handle"
+    },
+    {
+      "kod": "RNS-50",
+      "kategori": "somun-kesiciler",
+      "ad": "Hidrolik Somun Kesici",
+      "en": "Hydraulic Nut Splitter",
+      "kisa": "Paslanmış ve sıkışmış somunları cıvataya zarar vermeden keser. Değiştirilebilir sertleştirilmiş keski ucu.",
+      "en_kisa": "Splits rusted and seized nuts without damaging the bolt. Replaceable hardened chisel.",
+      "ozellikler": [
+        [
+          "Cıvata aralığı",
+          "M20–M33"
+        ],
+        [
+          "Somun ölçüsü",
+          "36–50 mm"
+        ],
+        [
+          "Kesme kuvveti",
+          "20 t"
+        ],
+        [
+          "Çalışma basıncı",
+          "700 bar"
+        ],
+        [
+          "Keski",
+          "Değiştirilebilir"
+        ],
+        [
+          "Ağırlık",
+          "2,6 kg"
+        ]
+      ],
+      "gorsel": "a hydraulic nut splitter: a compact steel ring-shaped head with an inner chisel blade pointing at a rusty hex nut on a threaded stud, a short cylinder body and a coupler"
+    },
+    {
+      "kod": "RTP-2800",
+      "kategori": "test-pompalari",
+      "rozet": "2.800 bar",
+      "ad": "Hidrostatik Test Pompası, Havalı",
+      "en": "Air Driven Hydrostatic Test Pump",
+      "kisa": "Boru hatları, vanalar ve basınçlı kaplar için hava tahrikli test pompası. Paslanmaz çelik çerçeve, iki manometre.",
+      "en_kisa": "Air-driven test pump for pipelines, valves and pressure vessels. Stainless steel frame with two gauges.",
+      "ozellikler": [
+        [
+          "Test basıncı",
+          "2.800 bar"
+        ],
+        [
+          "Akışkan",
+          "Su / yağ"
+        ],
+        [
+          "Hava basıncı",
+          "2–8 bar"
+        ],
+        [
+          "Manometre",
+          "2 × 100 mm"
+        ],
+        [
+          "Çerçeve",
+          "Paslanmaz"
+        ],
+        [
+          "Ağırlık",
+          "28 kg"
+        ]
+      ],
+      "gorsel": "an air-driven hydrostatic test pump unit: a tubular stainless steel frame with carry handles, a vertical pneumatic booster cylinder, two large round pressure gauges with blank dark dials, high-pressure needle valves"
+    }
+  ],
+  "sahneler": [
+    {
+      "anahtar": "hero",
+      "oran": "16:9",
+      "gorsel": "a hydraulic torque wrench seated on a giant hex nut of a wind turbine tower flange, extreme close up, the nut and bolt circle receding in perspective, matt black tool body, a single safety yellow hose coupler, faint mist"
+    },
+    {
+      "anahtar": "kategori-tork",
+      "oran": "4:5",
+      "gorsel": "a hydraulic torque wrench and its reaction arm resting on a row of large flange bolts, seen from a low three-quarter angle"
+    },
+    {
+      "anahtar": "kategori-hidrolik",
+      "oran": "4:5",
+      "gorsel": "three hydraulic cylinders of different heights standing in a line next to a compact electric pump, hoses curving between them"
+    },
+    {
+      "anahtar": "kategori-endustriyel",
+      "oran": "4:5",
+      "gorsel": "a flange spreader wedge inserted between two thick pipe flanges of a large valve, flanges slightly opened"
+    },
+    {
+      "anahtar": "hizmet-kiralama",
+      "oran": "4:5",
+      "gorsel": "an open rugged black transport case containing a hydraulic torque wrench, a set of sockets and a coiled hose, fitted foam"
+    },
+    {
+      "anahtar": "hizmet-kalibrasyon",
+      "oran": "4:5",
+      "gorsel": "a torque wrench mounted on a precise steel calibration test bench with a load transducer, workshop in deep shadow"
+    },
+    {
+      "anahtar": "hizmet-kaldirma",
+      "oran": "4:5",
+      "gorsel": "four synchronized hydraulic cylinders lifting the steel girder of a bridge bearing, hoses running to a central control unit, dusk"
+    },
+    {
+      "anahtar": "sektor-enerji",
+      "oran": "16:9",
+      "gorsel": "the bolted flange joint of a large steam turbine casing in a power plant, rows of heavy studs and nuts, a torque wrench placed on one nut"
+    }
+  ]
+}

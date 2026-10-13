@@ -105,6 +105,7 @@ class Theme
     public function fontUrl(): ?string
     {
         $families = [];
+        $widths = [];
 
         foreach (['heading', 'body'] as $role) {
             $family = $this->get("fonts.{$role}.family");
@@ -113,6 +114,12 @@ class Theme
             if ($family && $family !== 'system') {
                 $key = str_replace(' ', '+', $family);
                 $families[$key] = ($families[$key] ?? []) + array_flip($weights);
+
+                // Genişlik ekseni olan yazı tiplerinde (Archivo, Roboto Flex…)
+                // dar ve geniş kesimler `font-stretch` ile kullanılabilsin.
+                if ($width = $this->get("fonts.{$role}.width")) {
+                    $widths[$key] = $width;
+                }
             }
         }
 
@@ -123,8 +130,15 @@ class Theme
         $parts = [];
 
         foreach ($families as $family => $weights) {
-            $list = implode(';', array_map('strval', array_keys($weights)));
-            $parts[] = "family={$family}:wght@{$list}";
+            ksort($weights);
+
+            if (isset($widths[$family])) {
+                $list = implode(';', array_map(fn ($w) => "{$widths[$family]},{$w}", array_keys($weights)));
+                $parts[] = "family={$family}:wdth,wght@{$list}";
+            } else {
+                $list = implode(';', array_map('strval', array_keys($weights)));
+                $parts[] = "family={$family}:wght@{$list}";
+            }
         }
 
         return 'https://fonts.googleapis.com/css2?'.implode('&', $parts).'&display=swap';

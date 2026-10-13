@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cıvata Germe Hesabı</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/ortak.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Hidrolik Cıvata Germe Hesabı</h1>
+    <p>Cıvata ölçüsü, sınıfı ve sıkma boyunu girin. Hedef ön yük için germe aletine uygulanacak yük ve pompa basıncı, yük kaybı (LTF) dahil hesaplanır.</p>
+  </header>
+  <div class="grid">
+    <section class="panel">
+      <form novalidate>
+        <label for="sys">Cıvata standardı<select id="sys"><option value="M">Metrik (ISO)</option><option value="I">İnç (8UN)</option></select></label>
+        <div class="row">
+          <label for="size">Ölçü<select id="size"></select></label>
+          <label for="grade">Akma dayanımı<select id="grade">
+            <option value="640">8.8 (640 MPa)</option><option value="940">10.9 (940 MPa)</option><option value="724" selected>B7 / L7 (724 MPa)</option><option value="1100">12.9 (1100 MPa)</option>
+          </select></label>
+        </div>
+        <label for="pct">Hedef kalıcı ön yük (akmanın %'si)<input id="pct" type="number" min="20" max="80" step="5" value="60"></label>
+        <label for="grip">Sıkma boyu (mm)<input id="grip" type="number" min="10" step="1" value="160">
+          <span class="hint">İki somun yüzeyi arası mesafe (flanş kalınlıkları + conta).</span></label>
+        <div class="row">
+          <label for="pass">Uygulama yöntemi<select id="pass"><option value="100">%100 (tüm cıvatalar aynı anda)</option><option value="50">%50 (yarısı, iki tur)</option><option value="25">%25 (dörtte biri)</option></select></label>
+          <label for="tool">Germe aleti<select id="tool"></select></label>
+        </div>
+        <div class="err" id="err" role="alert"></div>
+      </form>
+    </section>
+    <section class="panel out">
+      <h2 id="title">Germe basıncı</h2>
+      <div class="big"><b id="pa">–</b><span id="pasub"></span></div>
+      <svg class="viz" id="svg" viewBox="0 0 600 90" role="img" aria-label="Yük karşılaştırması"></svg>
+      <div class="kpis" id="k"></div>
+      <ul class="notes" id="nt"></ul>
+      <div class="tbl"><table id="tbl"></table></div>
+      <p class="note">LTF (yük aktarım faktörü) = 1,01 + d ÷ sıkma boyu. Somun oturtulduktan sonra dişlerde ve somun yüzeyinde oluşan esneme nedeniyle uygulanan yükün bir kısmı kaybolur; alete bu kayıp kadar fazla yük verilir. Germe aleti listesi örnek katalogdur (<code>GERMELER</code>).</p>
+    </section>
+  </div>
+</div>
+<script src="assets/ayarlar.js"></script>
+<script src="assets/ortak.js"></script>
+<script>
+// ---- ÖRNEK KATALOG ---- alan: hidrolik etkin alan cm², d: cıvata çap aralığı mm, pmax bar
+const GERMELER=[
+  {kod:"BT-1",alan:15.5,d:[16,27],pmax:1500},{kod:"BT-2",alan:27,d:[24,36],pmax:1500},
+  {kod:"BT-3",alan:45,d:[30,45],pmax:1500},{kod:"BT-4",alan:70,d:[39,56],pmax:1500},
+  {kod:"BT-5",alan:105,d:[48,68],pmax:1500},{kod:"BT-6",alan:150,d:[60,80],pmax:1500},{kod:"BT-7",alan:210,d:[72,102],pmax:1500}
+];
+function sizes(){const sys=$('sys').value,l=sys==='M'?MET:INC;$('size').innerHTML=l.map((r,i)=>`<option value="${i}">${r[0]}</option>`).join('');$('size').value=sys==='M'?11:8;}
+function calc(){
+  const b=bolt($('sys').value,+$('size').value), Sy=+$('grade').value, pct=+$('pct').value, grip=+$('grip').value, cov=+$('pass').value;
+  if(!(grip>0&&pct>0)){$('err').textContent='Sıkma boyu ve ön yük girilmeli.';return} $('err').textContent='';
+  const Fres=b.As*Sy*pct/100/1000;                   // kN
+  const ltf=1.01+b.d/grip; let Fapp=Fres*ltf;
+  if(cov<100) Fapp*=cov===50?1.1:1.15;                 // çapraz etkileşim payı
+  const fits=GERMELER.filter(g=>b.d>=g.d[0]&&b.d<=g.d[1]);
+  const keep=$('tool').value;
+  $('tool').innerHTML=fits.length?fits.map(g=>`<option>${g.kod}</option>`).join(''):'<option>—</option>';
+  let g=fits.find(x=>x.kod===keep)||fits.find(x=>Fapp*1e3/(x.alan*10)<=x.pmax*0.9)||fits[0];
+  if(g) $('tool').value=g.kod;
+  const appStress=Fapp*1000/b.As, ratio=appStress/Sy;
+  kpis('k',[[fmt(Fres,1)+' kN','Hedef kalıcı ön yük'],[fmt(ltf,2),'LTF'],[fmt(Fapp,1)+' kN','Alete uygulanan yük'],[fmt(ratio*100)+' %','Germe anında akma oranı'],[b.af+' mm','Somun ağzı']]);
+  const nt=[];
+  if(!g){ $('pa').textContent='Alet yok'; $('pasub').textContent=''; nt.push(`${b.lbl} için listede germe aleti yok.`); }
+  else{
+    const p=Fapp*1000/(g.alan*100)*10/1; // N / mm² → MPa ×10 = bar
+    const bar=Fapp*1000/(g.alan*100)*10;
+    $('title').textContent=`${g.kod} · ${b.lbl}`;
+    $('pa').textContent=fmt(bar)+' bar'; $('pasub').textContent=fmt(bar*14.5038)+' psi';
+    nt.push(bar<=g.pmax*0.9?pill(1,'Uygun')+` ${g.kod} kapasitesinin %${fmt(bar/g.pmax*100)}'inde çalışır.`:pill(0,'Aşırı')+` ${fmt(bar)} bar, ${g.kod} sınırını (${g.pmax} bar) aşıyor veya çok yakın. Daha büyük alet seçin ya da ön yükü düşürün.`);
+    const W=600,mx=Math.max(Fapp,g.alan*g.pmax/100)*1.05, sc=v=>(W-20)*v/mx;
+    $('svg').innerHTML=`<rect x="0" y="8" width="${sc(g.alan*g.pmax/100).toFixed(1)}" height="22" fill="var(--steel-2)"/><text x="6" y="24" font-family="var(--mono)" font-size="11" fill="var(--fg)">Alet kapasitesi ${fmt(g.alan*g.pmax/100)} kN</text>
+      <rect x="0" y="36" width="${sc(Fapp).toFixed(1)}" height="22" fill="var(--accent)"/><text x="6" y="52" font-family="var(--mono)" font-size="11" fill="var(--accent-ink)">Uygulanan ${fmt(Fapp)} kN</text>
+      <rect x="0" y="64" width="${sc(Fres).toFixed(1)}" height="22" fill="var(--ok)"/><text x="6" y="80" font-family="var(--mono)" font-size="11" fill="var(--panel)">Kalıcı ${fmt(Fres)} kN</text>`;
+  }
+  if(ratio>0.9) nt.push(pill(0,'Dikkat')+' Germe anında cıvata gerilmesi akmanın %90\'ını aşıyor. Hedef ön yükü düşürün veya sıkma boyunu artırın.');
+  if(grip<3*b.d) nt.push('Sıkma boyu çapın 3 katından kısa; yük kaybı yüksektir. Bu bağlantıda tork yöntemi daha verimli olabilir.');
+  if(cov<100) nt.push(`%${cov} kapsama ile çalışırken her turda ölçülen kayıp için ek pay eklendi (%${cov===50?10:15}). Son turda tüm cıvataları kontrol basıncında tekrar yoklayın.`);
+  nt.push('Cıvata ucu, somun üstünden en az 1 çap kadar çıkıntılı olmalıdır; germe aleti bu uzantıya tutunur.');
+  notes('nt',nt);
+  $('tbl').innerHTML='<tr><th>Alet</th><th>Çap aralığı</th><th>Etkin alan</th><th>Gerekli basınç</th></tr>'+GERMELER.filter(x=>b.d>=x.d[0]-6&&b.d<=x.d[1]+6).map(x=>{const fit=b.d>=x.d[0]&&b.d<=x.d[1];const p=Fapp*1000/(x.alan*100)*10;return `<tr class="${x===g?'sel':''}"><td class="n">${x.kod}</td><td class="n">${x.d[0]}–${x.d[1]} mm</td><td class="n">${x.alan} cm²</td><td class="n">${fit?fmt(p)+' bar':'çap uymaz'}</td></tr>`}).join('');
+}
+$('sys').addEventListener('change',()=>{sizes();calc()});
+sizes(); live(['size','grade','pct','grip','pass','tool'],calc);
+</script>
+
+</body>
+</html>

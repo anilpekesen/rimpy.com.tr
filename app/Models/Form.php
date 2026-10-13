@@ -43,6 +43,23 @@ class Form extends Model
         return array_values(array_filter(array_map('trim', explode(',', (string) $this->notify_emails))));
     }
 
+    /**
+     * Gönderideki bir anahtarın okunur adı. Formun kendi alanlarının yanında
+     * sistemin eklediği değerler de vardır (teklif sepetindeki ürünler gibi).
+     */
+    public function fieldLabel(string $key, string $locale = 'tr'): string
+    {
+        $field = collect($this->fields ?? [])->firstWhere('key', $key);
+
+        if ($field) {
+            return $field['label'][$locale] ?? $field['label'][Locales::default()] ?? $key;
+        }
+
+        return [
+            'urunler' => ['tr' => 'Talep edilen ürünler', 'en' => 'Requested products'],
+        ][$key][$locale] ?? $key;
+    }
+
     public function localized(string $attribute, ?string $locale = null): ?string
     {
         $locale ??= app()->getLocale();

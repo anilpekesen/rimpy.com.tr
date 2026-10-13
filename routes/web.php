@@ -87,6 +87,19 @@ Route::prefix($admin)->name('admin.')->group(function () {
 Route::post('form/{form:key}', [FrontController::class, 'submitForm'])
     ->middleware('throttle:10,1')->name('form.submit');
 
+// Teklif sepeti. Adresler dilden bağımsızdır; ziyaretçi hiçbirini adres
+// çubuğunda görmez, yalnızca sayfadaki betik ve formlar kullanır.
+Route::prefix('teklif-sepeti')->name('quote.')->controller(App\Http\Controllers\QuoteController::class)->group(function () {
+    Route::get('/', 'show')->name('show');
+    Route::post('ekle', 'add')->middleware('throttle:60,1')->name('add');
+    Route::post('ekle-coklu', 'addMany')->middleware('throttle:30,1')->name('add-many');
+    Route::post('guncelle', 'update')->middleware('throttle:120,1')->name('update');
+    Route::post('kaldir', 'remove')->middleware('throttle:120,1')->name('remove');
+});
+
+Route::get('araclar/tork-tablosu/{item}', [App\Http\Controllers\ToolsController::class, 'torqueTable'])
+    ->whereNumber('item')->middleware('throttle:30,1')->name('tools.torque-table');
+
 Route::get('sitemap.xml', [FrontController::class, 'sitemap'])->name('sitemap');
 Route::get('robots.txt', [FrontController::class, 'robots'])->name('robots');
 

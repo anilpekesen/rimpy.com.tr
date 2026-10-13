@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hidrolik Sistem Uyumluluğu</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/ortak.css">
+<style>
+.comp{display:grid;gap:10px;padding:12px;border:1px solid var(--line);border-radius:4px}
+.comp h3{font-family:var(--display);font-size:1.05rem;margin:0}
+td.st{white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Hidrolik Sistem Uyumluluk Kontrolü</h1>
+    <p>Pompa, hortum, manometre ve aletinizin basınç sınıfı, bağlantı tipi, valf ve yağ hacmi açısından birlikte çalışıp çalışamayacağını kontrol edin. Farklı markalardan oluşan setler için de kullanılabilir.</p>
+  </header>
+  <div class="grid">
+    <section class="panel">
+      <form novalidate>
+        <div class="comp"><h3>Pompa</h3>
+          <div class="row"><label for="pP">Maks. basınç (bar)<input id="pP" type="number" value="700"></label>
+            <label for="pV">Valf<select id="pV"><option value="32">3/2 (tek etkili)</option><option value="43" selected>4/3 (çift etkili)</option></select></label></div>
+          <div class="row"><label for="pD">Kullanılabilir depo (L)<input id="pD" type="number" step="any" value="4"></label>
+            <label for="pC">Çıkış bağlantısı<select id="pC" class="cpl"></select></label></div>
+          <label for="pN">Çıkış sayısı<input id="pN" type="number" min="1" value="1"></label>
+        </div>
+        <div class="comp"><h3>Hortum</h3>
+          <div class="row"><label for="hP">Çalışma basıncı (bar)<input id="hP" type="number" value="700"></label>
+            <label for="hB">Patlama basıncı (bar)<input id="hB" type="number" value="2800"></label></div>
+          <div class="row"><label for="hC">Uç bağlantısı<select id="hC" class="cpl"></select></label>
+            <label for="hN">Hortum adedi<input id="hN" type="number" min="0" value="2"></label></div>
+        </div>
+        <div class="comp"><h3>Manometre</h3>
+          <div class="row"><label for="gR">Skala üst değeri (bar)<input id="gR" type="number" value="1000"></label>
+            <label for="gY">Var mı?<select id="gY"><option value="1">Var</option><option value="0">Yok</option></select></label></div>
+        </div>
+        <div class="comp"><h3>Alet</h3>
+          <label for="tT">Alet tipi<select id="tT">
+            <option value="SA">Tek etkili silindir</option><option value="DA">Çift etkili silindir</option><option value="TW" selected>Hidrolik tork anahtarı</option><option value="BT">Cıvata germe aleti</option><option value="NS">Somun kırıcı / çektirme</option></select></label>
+          <div class="row"><label for="tP">Çalışma basıncı (bar)<input id="tP" type="number" value="700"></label>
+            <label for="tC">Bağlantı<select id="tC" class="cpl"></select></label></div>
+          <div class="row"><label for="tV">Yağ hacmi / alet (cm³)<input id="tV" type="number" value="250"></label>
+            <label for="tN">Alet adedi<input id="tN" type="number" min="1" value="1"></label></div>
+        </div>
+        <div id="contactSlot"></div>
+      </form>
+    </section>
+    <section class="panel out">
+      <h2 id="title">Kontrol sonucu</h2>
+      <svg class="viz" id="svg" viewBox="0 0 640 150" role="img" aria-label="Sistem zinciri"></svg>
+      <div class="kpis" id="k"></div>
+      <div class="tbl"><table id="tbl"></table></div>
+      <p class="note">Kontroller ISO 4413 hidrolik güvenlik ilkelerine ve 700 bar el aletleri için yaygın saha uygulamasına dayanır (hortum patlama emniyet katsayısı en az 4:1, manometre skalası çalışma basıncının en az 1,25 katı). Bağlantı tipi listesi dosyadaki <code>BAGLANTILAR</code> dizisinden düzenlenebilir.</p>
+    </section>
+  </div>
+</div>
+<script src="assets/ayarlar.js"></script>
+<script src="assets/ortak.js"></script>
+<script>
+const BAGLANTILAR=[
+  ['N38','3/8" NPTF, standart 700 bar hızlı kaplin'],
+  ['N14','1/4" NPTF, ikiz kaplin (tork anahtarı)'],
+  ['N12','1/2" NPTF'],
+  ['T15','Germe aleti hızlı kaplini, 1500 bar'],
+  ['OTH','Diğer / bilinmiyor']
+];
+document.querySelectorAll('.cpl').forEach(s=>s.innerHTML=BAGLANTILAR.map(b=>`<option value="${b[0]}">${b[1]}</option>`).join(''));
+$('pC').value='N14'; $('hC').value='N14'; $('tC').value='N14';
+let RES=null;
+function calc(){
+  const v=id=>+$(id).value, t=$('tT').value, DA=t==='DA'||t==='TW';
+  const pP=v('pP'),hP=v('hP'),hB=v('hB'),gR=v('gR'),gY=v('gY'),tP=v('tP'),tV=v('tV'),tN=v('tN'),pD=v('pD'),hN=v('hN'),pN=v('pN');
+  const work=Math.min(pP,tP), cName=c=>BAGLANTILAR.find(b=>b[0]===c)?.[1].split(',')[0]||c;
+  const C=[]; let N='ALET'; const add=(grp,ok,lvl,msg)=>C.push({grp,ok,lvl,msg,n:N});
+  // basınç
+  N='ALET'; add('Basınç',tP>=pP,'k',tP>=pP?`Alet (${tP} bar) pompa basıncını (${pP} bar) karşılıyor.`:`Pompa ${pP} bar verebilir, alet ${tP} bar. Pompada emniyet valfi ${tP} bar'a ayarlanmalı veya uygun pompa kullanılmalı.`);
+  N='HORTUM'; add('Basınç',hP>=pP,'k',hP>=pP?`Hortum çalışma basıncı (${hP} bar) yeterli.`:`Hortum ${hP} bar, pompa ${pP} bar. Hortum patlayabilir; ${pP} bar sınıfı hortum kullanın.`);
+  add('Basınç',hB>=4*hP,'k',hB>=4*hP?`Hortum patlama emniyeti ${fmt(hB/hP,1)}:1.`:`Patlama/çalışma oranı ${fmt(hB/hP,1)}:1; en az 4:1 olmalı.`);
+  N='MANOMETRE'; if(gY) add('Basınç',gR>=pP*1.25,'u',gR>=pP*1.25?`Manometre skalası (${gR} bar) uygun.`:`Manometre skalası ${gR} bar; en az ${fmt(pP*1.25)} bar olmalı, aksi halde ibre sınırda çalışır ve gösterge zarar görür.`);
+  else add('Basınç',t==='SA'||t==='NS','u',t==='SA'||t==='NS'?'Manometre yok; tek etkili basit işlerde kabul edilebilir ama önerilir.':'Manometre olmadan tork veya ön yük ayarlanamaz. Manometre şarttır.');
+  N='POMPA'; if((t==='BT')!==(pP>800)) add('Basınç',false,'k',t==='BT'?'Germe aleti 1500 bar\'a kadar basınç ister; 700 bar pompa yeterli ön yük vermez.':'700 bar alet, 1500 bar pompaya bağlanmış. Alet ve hortumlar hasar görür.');
+  // bağlantı
+  const cp=$('pC').value, ch=$('hC').value, ct=$('tC').value;
+  N='HORTUM'; add('Bağlantı',cp===ch,'k',cp===ch?'Pompa ve hortum bağlantıları aynı.':`Pompa (${cName(cp)}) ile hortum (${cName(ch)}) uyumsuz; adaptör gerekir.`);
+  N='ALET'; add('Bağlantı',ch===ct,'k',ch===ct?'Hortum ve alet bağlantıları aynı.':`Hortum (${cName(ch)}) ile alet (${cName(ct)}) uyumsuz; adaptör gerekir.`);
+  if([cp,ch,ct].includes('OTH')) add('Bağlantı',false,'u','Bilinmeyen bağlantı tipi var. Kaplin dişini ve basınç sınıfını etiketten kontrol edin.');
+  // valf ve hortum adedi
+  N='POMPA'; if(DA) add('Valf',$('pV').value==='43','k',$('pV').value==='43'?'4/3 valf çift etkili alet için uygun.':'Çift etkili alet 4/3 valfli pompa ister; 3/2 valfle alet geri dönmez.');
+  const needH=tN*(DA?2:1);
+  N='HORTUM'; add('Hortum',hN>=needH,'k',hN>=needH?`${hN} hortum yeterli (gereken ${needH}).`:`${tN} ${DA?'çift etkili ':''}alet için ${needH} hortum gerekir, ${hN} var.`);
+  N='POMPA'; if(tN>pN) add('Hortum',false,'u',`${tN} alet, ${pN} çıkışlı pompaya bağlanacak. Dağıtım manifoldu gerekir.`);
+  // yağ
+  const oil=tV*tN/1000;
+  N='POMPA'; add('Yağ',oil<=pD*0.8,'k',oil<=pD*0.8?`Aletlerin yağ ihtiyacı (${fmt(oil,2)} L) depoya sığıyor.`:`Aletler ${fmt(oil,2)} L yağ ister, kullanılabilir depo ${pD} L. Daha büyük depolu pompa gerekir.`);
+  RES={C,work};
+  const bad=C.filter(c=>!c.ok&&c.lvl==='k').length, warn=C.filter(c=>!c.ok&&c.lvl==='u').length;
+  $('title').innerHTML=bad?pill(0,'Uyumsuz')+` ${bad} kritik sorun`:warn?pill(0,'Dikkat')+` ${warn} uyarı`:pill(1,'Uyumlu')+' Set birlikte çalışabilir';
+  kpis('k',[[work+' bar','Güvenli çalışma basıncı'],[fmt(oil,2)+' L','Toplam yağ ihtiyacı'],[needH,'Gereken hortum'],[C.filter(c=>c.ok).length+' / '+C.length,'Geçen kontrol']]);
+  $('tbl').innerHTML='<tr><th>Konu</th><th>Durum</th><th>Açıklama</th></tr>'+C.map(c=>`<tr><td>${c.grp}</td><td class="st">${c.ok?pill(1,'Uygun'):pill(0,c.lvl==='k'?'Kritik':'Uyarı')}</td><td>${c.msg}</td></tr>`).join('');
+  // zincir
+  const ok=n=>C.filter(c=>c.n===n).every(c=>c.ok);
+  const nodes=[['POMPA',`${pP} bar · ${pD} L`],['MANOMETRE',gY?`0–${gR} bar`:'yok'],['HORTUM',`${hN} adet · ${hP} bar`],['ALET',`${tN} × ${$('tT').selectedOptions[0].text}`]].map(n=>[...n,ok(n[0])]);
+  const conn=i=>i===1?true:i===2?cp===ch:ch===ct;
+  const W=640,bw=132,gap=(W-bw*4)/3; let s='';
+  nodes.forEach((n,i)=>{const x=i*(bw+gap);
+    if(i) s+=`<line x1="${x-gap}" y1="62" x2="${x}" y2="62" stroke="var(--oil)" stroke-width="4"/><text x="${x-gap/2}" y="52" text-anchor="middle" font-family="var(--mono)" font-size="15" fill="${conn(i)?'var(--ok)':'var(--warn)'}">${conn(i)?'●':'✕'}</text>`;
+    s+=`<rect x="${x}" y="30" width="${bw}" height="64" rx="4" fill="var(--panel)" stroke="${n[2]?'var(--ok)':'var(--warn)'}" stroke-width="2.5"/>`;
+    s+=`<text x="${x+bw/2}" y="56" text-anchor="middle" font-family="var(--display)" font-size="16" font-weight="700" fill="var(--fg)">${n[0]}</text>`;
+    s+=`<text x="${x+bw/2}" y="76" text-anchor="middle" font-family="var(--mono)" font-size="9.5" fill="var(--muted)">${esc(n[1]).slice(0,24)}</text>`;
+    s+=`<text x="${x+bw/2}" y="116" text-anchor="middle" font-family="var(--body)" font-size="12" font-weight="600" fill="${n[2]?'var(--ok)':'var(--warn)'}">${n[2]?'uygun':'kontrol et'}</text>`;});
+  $('svg').innerHTML=s;
+}
+live(['pP','pV','pD','pC','pN','hP','hB','hC','hN','gR','gY','tT','tP','tC','tV','tN'],calc);
+wireContact(()=>({title:'Hidrolik Sistem Uyumluluk Raporu',prefix:'UYM',data:{kontroller:RES.C.map(c=>({konu:c.grp,uygun:c.ok,mesaj:c.msg.replace(/<[^>]+>/g,'')}))},
+  html:'<h2>Kontrol sonuçları</h2>'+tableHTML(['Konu','Durum','Açıklama'],RES.C.map(c=>[c.grp,c.ok?'Uygun':c.lvl==='k'?'KRİTİK':'Uyarı',c.msg.replace(/<[^>]+>/g,'')]))+
+   '<h2>Girilen değerler</h2>'+tableHTML(['Bileşen','Değer'],[['Pompa',`${$('pP').value} bar, valf ${$('pV').selectedOptions[0].text}, depo ${$('pD').value} L`],['Hortum',`${$('hN').value} adet, ${$('hP').value}/${$('hB').value} bar`],['Manometre',$('gY').value==='1'?`0–${$('gR').value} bar`:'yok'],['Alet',`${$('tN').value} × ${$('tT').selectedOptions[0].text}, ${$('tP').value} bar`]])}));
+</script>
+
+</body>
+</html>

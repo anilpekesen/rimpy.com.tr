@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proje Set Listesi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/ortak.css">
+<style>
+td input.q{width:4.5em;padding:4px 6px;font-family:var(--mono)}
+tr.grp td{font-family:var(--display);font-size:1rem;background:var(--bg);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Proje Set Listesi</h1>
+    <p>İşi tanımlayın: cıvata ölçüsü ve adedi, ekip sayısı ve yöntem. Gereken anahtar, pompa, hortum, lokma ve yedek parça listesi adetleriyle çıkar. Adetleri düzenleyip PDF olarak indirebilir veya teklif isteyebilirsiniz.</p>
+  </header>
+  <div class="grid">
+    <section class="panel">
+      <form novalidate>
+        <label for="proj">Proje / iş adı<input id="proj" value="Eşanjör flanş bakımı"></label>
+        <label for="job">İş tipi<select id="job">
+          <option value="torque">Flanş sıkma — hidrolik tork</option>
+          <option value="tension">Flanş sıkma — cıvata germe</option>
+          <option value="remove">Söküm (tork + somun kırıcı)</option>
+        </select></label>
+        <div class="row">
+          <label for="sys">Standart<select id="sys"><option value="M">Metrik</option><option value="I">İnç</option></select></label>
+          <label for="size">Cıvata ölçüsü<select id="size"></select></label>
+        </div>
+        <div class="row">
+          <label for="bpf">Flanş başına cıvata<input id="bpf" type="number" min="4" step="4" value="16"></label>
+          <label for="nfl">Flanş adedi<input id="nfl" type="number" min="1" value="12"></label>
+        </div>
+        <div class="row">
+          <label for="crew">Ekip sayısı<input id="crew" type="number" min="1" value="2"></label>
+          <label for="tpc">Ekip başı alet<input id="tpc" type="number" min="1" max="8" value="2"><span class="hint">Aynı anda çalışan anahtar veya germe aleti</span></label>
+        </div>
+        <div class="row">
+          <label for="hl">Hortum boyu (m)<select id="hl"><option>2</option><option selected>5</option><option>10</option></select></label>
+          <label for="pw">Enerji<select id="pw"><option value="el">Elektrik</option><option value="air">Basınçlı hava</option></select></label>
+        </div>
+        <label class="check"><input id="spare" type="checkbox" checked> <span>Yedek parça ve sarf malzemesi ekle</span></label>
+        <div id="contactSlot"></div>
+      </form>
+    </section>
+    <section class="panel out">
+      <h2 id="title"></h2>
+      <div class="kpis" id="k"></div>
+      <div class="tbl"><table id="bom"></table></div>
+      <ul class="notes" id="nt"></ul>
+      <p class="note">Ürün kodları örnek katalogdur; diğer hesaplama araçlarındaki listelerle aynıdır. Kendi kodlarınızla değiştirmek için dosyadaki <code>KAT</code> nesnesini düzenleyin.</p>
+    </section>
+  </div>
+</div>
+<script src="assets/ayarlar.js"></script>
+<script src="assets/ortak.js"></script>
+<script>
+// ---- ÖRNEK KATALOG (diğer araçlarla aynı kodlar) ----
+const KAT={
+  anahtar:[{kod:"RL-2",max:2700,af:[24,60]},{kod:"RL-4",max:5900,af:[32,80]},{kod:"RL-6",max:10000,af:[41,95]},{kod:"RL-8",max:14600,af:[46,105]},{kod:"RL-14",max:24000,af:[60,130]}],
+  germe:[{kod:"BT-1",alan:15.5,d:[16,27]},{kod:"BT-2",alan:27,d:[24,36]},{kod:"BT-3",alan:45,d:[30,45]},{kod:"BT-4",alan:70,d:[39,56]},{kod:"BT-5",alan:105,d:[48,68]},{kod:"BT-6",alan:150,d:[60,80]},{kod:"BT-7",alan:210,d:[72,102]}],
+  kirici:[{kod:"NS-1",af:[10,19]},{kod:"NS-2",af:[19,27]},{kod:"NS-3",af:[27,36]},{kod:"NS-4",af:[36,46]},{kod:"NS-5",af:[46,60]},{kod:"NS-6",af:[60,75]},{kod:"NS-7",af:[75,95]}],
+  pompaTork:{el:"PE-07D",air:"PA-10D"}, pompaTork4:{el:"PE-30M",air:"PA-10D"}, pompaGerme:{el:"PG-15E",air:"PG-15A"}
+};
+let LINES=[], overrides={};
+function sizes(){const s=$('sys').value,l=s==='M'?MET:INC;$('size').innerHTML=l.map((r,i)=>`<option value="${i}">${r[0]}</option>`).join('');$('size').value=s==='M'?11:8;}
+function calc(){
+  const job=$('job').value, b=bolt($('sys').value,+$('size').value), bpf=+$('bpf').value, nfl=+$('nfl').value, crew=Math.max(1,+$('crew').value), tpc=Math.max(1,+$('tpc').value), hl=$('hl').value, pw=$('pw').value, spare=$('spare').checked;
+  const tools=crew*tpc, total=bpf*nfl;
+  const T=0.12*b.As*(b.d>40?724:660)*0.5*b.d/1e6*1000;        // moly, %50 akma — tahmini
+  const L=[]; const g=t=>L.push({grp:t}); const it=(kod,ad,q,acik)=>L.push({kod,ad,q,acik});
+  const notesA=[];
+  if(job==='tension'){
+    const tool=KAT.germe.find(x=>b.d>=x.d[0]&&b.d<=x.d[1]);
+    g('Germe ekipmanı');
+    if(tool){ it(tool.kod,'Hidrolik cıvata germe aleti',tools,`${b.lbl} için, 1500 bar`); it(tool.kod+'-PB','Köprü ve çekme somunu seti',tools,b.lbl+' dişli'); }
+    else notesA.push(`${b.lbl} için listede germe aleti yok.`);
+    it(KAT.pompaGerme[pw],'1500 bar germe pompası',crew,pw==='air'?'Havalı':'Elektrikli');
+    g('Bağlantı'); it('HG-'+hl,'1500 bar germe hortumu, '+hl+' m',tools+crew,'Pompadan ilk alete + aletler arası zincir');
+    it('MG-1500','Manometre 0–1600 bar',crew,'');
+    notesA.push('Germe aletleri genellikle seri bağlanır; %50 kapsama için cıvata sayısının yarısı kadar alet idealdir.');
+  } else {
+    const af=b.af, need=job==='remove'?T*1.8:T;
+    const w=KAT.anahtar.find(x=>af>=x.af[0]&&af<=x.af[1]&&need<=x.max*0.85)||KAT.anahtar.find(x=>af>=x.af[0]&&af<=x.af[1]);
+    g('Tork ekipmanı');
+    if(w){ it(w.kod,'Hidrolik tork anahtarı, kaset tip',tools,`${fmt(w.max)} Nm maks.`); it(w.kod+'-H'+af,`Altıgen kaset ${af} mm`,tools,'Somun ağzı '+af+' mm'); }
+    else notesA.push(`${af} mm ağız ve ${fmt(need)} Nm için listede anahtar yok.`);
+    const multi=tpc>1; it(multi?KAT.pompaTork4[pw]:KAT.pompaTork[pw],multi?'Tork pompası, 4 çıkışlı':'Tork pompası, 4/3 valf',crew,pw==='air'?'Havalı':'Elektrikli, uzaktan kumandalı');
+    g('Bağlantı'); it('HT-'+hl,'İkiz hortum 700 bar, '+hl+' m',tools,'Gidiş + dönüş');
+    it('MG-1000','Manometre 0–1000 bar (tork skalalı)',crew,'');
+    if(job==='remove'){ const k=KAT.kirici.find(x=>af>=x.af[0]&&af<=x.af[1]); g('Söküm'); if(k){it(k.kod,'Hidrolik somun kırıcı',crew,'Ağız '+k.af[0]+'–'+k.af[1]+' mm'); it('PH-07','El pompası (kırıcı için)',crew,'0,7 L'); it('HS-2','Tek hortum 700 bar, 2 m',crew,'');}
+      notesA.push('Söküm torku sıkma torkunun 1,5–2 katı olabilir; anahtar buna göre seçildi.'); }
+  }
+  if(spare){ g('Yedek ve sarf');
+    it('KS-SET','Hızlı kaplin yedek seti',crew,'Erkek/dişi + toz kapağı');
+    it('YG-5','Hidrolik yağ, 5 L',Math.ceil(crew*1.5),'ISO VG 15/32');
+    if(job==='tension') it('SC-'+b.lbl,'Yedek çekme somunu',Math.ceil(tools*0.25)||1,'');
+    else { it('RX-'+b.af,'Reaksiyon ayağı yedek',Math.ceil(tools/2),''); }
+    it('MRK','Cıvata işaretleme kalemi ve etiket seti',crew,'Sıra ve tur takibi için');
+  }
+  LINES=L.map(l=>l.kod?{...l,q:overrides[l.kod]??l.q}:l);
+  $('title').textContent=`${$('proj').value||'Proje'} · ${b.lbl} × ${total}`;
+  kpis('k',[[total,'Toplam cıvata'],[tools,'Eş zamanlı alet'],[job==='tension'?'Germe':fmt(job==='remove'?T*1.8:T)+' Nm','Tahmini '+(job==='remove'?'söküm torku':'tork')],[LINES.filter(l=>l.kod).reduce((a,l)=>a+l.q,0),'Toplam kalem adedi']]);
+  $('bom').innerHTML='<tr><th>Kod</th><th>Ürün</th><th>Adet</th><th>Açıklama</th></tr>'+LINES.map(l=>l.grp?`<tr class="grp"><td colspan="4">${l.grp}</td></tr>`:`<tr><td class="n">${l.kod}</td><td>${l.ad}</td><td><input class="q" type="number" min="0" data-k="${l.kod}" value="${l.q}" aria-label="${l.ad} adedi"></td><td>${l.acik}</td></tr>`).join('');
+  $('bom').querySelectorAll('input.q').forEach(i=>i.addEventListener('change',()=>{overrides[i.dataset.k]=Math.max(0,+i.value||0);calc();}));
+  const perCrew=total/crew, hrs=perCrew*(job==='tension'?1.2:2)/tpc*(job==='remove'?1:1.6)/60;
+  notesA.push(`Ekip başına ${fmt(perCrew)} cıvata; ${job==='tension'?'germe':'çok turlu sıkma'} için tahmini süre ekip başına ${fmt(hrs,1)} saat (hazırlık hariç).`);
+  notesA.push('Tork değeri M24 ve üzeri için 8.8/B7 sınıfı, MoS₂ pasta ve %50 ön yük varsayımıyla tahmin edilmiştir; kesin değer için tork hesaplayıcıyı kullanın.');
+  notes('nt',notesA);
+}
+$('sys').addEventListener('change',()=>{sizes();overrides={};calc()});
+['job','size'].forEach(i=>$(i).addEventListener('change',()=>{overrides={};}));
+sizes(); live(['proj','job','size','bpf','nfl','crew','tpc','hl','pw','spare'],calc);
+wireContact(()=>({title:'Proje Set Listesi',prefix:'SET',
+  data:{proje:$('proj').value,is:$('job').selectedOptions[0].text,civata:$('size').selectedOptions[0].text,flans_basi:+$('bpf').value,flans:+$('nfl').value,ekip:+$('crew').value,kalemler:LINES.filter(l=>l.kod).map(({kod,ad,q})=>({kod,ad,adet:q}))},
+  html:tableHTML(['Proje','İş tipi','Cıvata','Toplam'],[[$('proj').value,$('job').selectedOptions[0].text,$('size').selectedOptions[0].text,(+$('bpf').value*+$('nfl').value)+' adet ('+$('nfl').value+' flanş × '+$('bpf').value+')']])+
+   '<h2>Malzeme listesi</h2>'+tableHTML(['Kod','Ürün','Adet','Açıklama'],LINES.filter(l=>l.kod&&l.q>0).map(l=>[l.kod,l.ad,l.q,l.acik]))+
+   ($('c_not').value?'<h2>Not</h2><p>'+esc($('c_not').value)+'</p>':'')}));
+</script>
+
+</body>
+</html>

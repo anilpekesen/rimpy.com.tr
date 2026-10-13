@@ -30,6 +30,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $seoTitle ?? $siteName }}</title>
 
@@ -68,7 +69,10 @@
         <link rel="stylesheet" href="{{ $fontUrl }}">
     @endif
 
-    @vite(['resources/css/builder.css', 'resources/js/site.js'])
+    {{-- local.css / local.js: bu kuruluma özel stil ve davranışlar. Mimar
+         çekirdeğinde boştur; çekirdek güncellenirken çakışma çıkmasın diye
+         siteye ait her şey yalnızca bu iki dosyada durur. --}}
+    @vite(['resources/css/builder.css', 'resources/css/local.css', 'resources/js/site.js', 'resources/js/local.js'])
 
     {{-- Tema jetonları ve bu sayfaya özel derlenmiş stiller --}}
     <style>
@@ -98,7 +102,7 @@
     @endif
 </head>
 <body class="{{ $isHome ? 'page-home' : '' }}">
-    <a href="#main" class="skip-link">İçeriğe geç</a>
+    <a href="#main" class="skip-link">{{ \App\Models\Translation::get('skip_to_content', 'İçeriğe geç', $locale) }}</a>
 
     @if ($chrome && $header)
         <header>{!! $renderer->template($header, $context) !!}</header>
@@ -108,6 +112,10 @@
 
     @if ($chrome && $footer)
         <footer>{!! $renderer->template($footer, $context) !!}</footer>
+    @endif
+
+    @if ($chrome && ! $preview)
+        <x-quote.drawer :locale="$locale" :context="$context" />
     @endif
 
     @stack('scripts')

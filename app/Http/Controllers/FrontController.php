@@ -149,7 +149,7 @@ class FrontController extends Controller
 
             [$previous, $next] = $this->neighbours($item, $type);
 
-            return view('front.content', [
+            return view($this->templateFor('content', $type), [
                 'item' => $item,
                 'translation' => $item->translation($locale),
                 'type' => $type,
@@ -216,7 +216,7 @@ class FrontController extends Controller
             // Sayfa değiştirirken arama terimi kaybolmasın.
             ->withQueryString();
 
-        return view('front.archive', [
+        return view($this->templateFor('archive', $type), [
             'type' => $type,
             'term' => $term,
             'items' => $items,
@@ -259,7 +259,19 @@ class FrontController extends Controller
         });
     }
 
-    // ── Yönlendirmeler ───────────────────────────────────────────────────
+    /**
+     * Türe özel şablon varsa onu seçer: `front.content-urunler` gibi. Bir
+     * sitenin ürün sayfası ötekilerden farklı görünebilsin diye; yoksa
+     * ortak şablon kullanılır.
+     */
+    private function templateFor(string $view, ContentType $type): string
+    {
+        $specific = "front.{$view}-{$type->key}";
+
+        return view()->exists($specific) ? $specific : "front.{$view}";
+    }
+
+        // ── Yönlendirmeler ───────────────────────────────────────────────────
 
     /** Eski adresleri kurtarır; arama motorlarındaki sıralama korunur. */
     private function checkRedirect(Request $request)
@@ -310,6 +322,15 @@ class FrontController extends Controller
             }
         }
 
+        // Teklif formuysa sepetteki ürünler mesaja eklenir. Sepet boşsa
+        // form yine gönderilebilir: "ne alacağımı bilmiyorum" talebi de teklif.
+        $cart = app(\App\Services\QuoteCart::class);
+        $isQuote = $form->key === config('cms.quote.form_key');
+
+        if ($isQuote && ! $cart->isEmpty()) {
+            $data = ['urunler' => $cart->summary($request->input('locale'))] + $data;
+        }
+
         $submission = null;
 
         if ($form->store_submissions) {
@@ -324,6 +345,17 @@ class FrontController extends Controller
         }
 
         $this->notify($form, $data, $submission);
+
+        if ($isQuote) {
+            $cart->clear();
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'sent',
+                'message' => $form->localized('success_message', $request->input('locale')),
+            ]);
+        }
 
         if ($form->redirect_url) {
             return redirect($form->redirect_url);

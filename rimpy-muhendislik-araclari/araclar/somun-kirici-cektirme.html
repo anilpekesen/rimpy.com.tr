@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Somun Kırıcı ve Çektirme</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/ortak.css">
+<style>
+.tabs{display:flex;gap:6px;margin-top:18px}
+.tabs button{font:inherit;font-weight:600;padding:8px 14px;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Somun Kırıcı ve Çektirme Seçimi</h1>
+    <p>Sıkışmış veya paslanmış somunlar için hidrolik somun kırıcı, rulman ve dişli sökümü için hidrolik çektirme seçin.</p>
+  </header>
+  <div class="tabs" role="group" aria-label="Araç"><button type="button" id="tabN" aria-pressed="true">Somun kırıcı</button><button type="button" id="tabP" aria-pressed="false">Çektirme</button></div>
+
+  <div class="grid" id="paneN">
+    <section class="panel">
+      <form novalidate>
+        <label for="nsys">Cıvata standardı<select id="nsys"><option value="M">Metrik</option><option value="I">İnç</option></select></label>
+        <label for="nsize">Cıvata ölçüsü<select id="nsize"></select></label>
+        <label for="naf">Somun ağzı (mm)<input id="naf" type="number" min="8" step="1"><span class="hint">Ölçüden otomatik dolar; farklıysa düzeltin.</span></label>
+        <label for="nhard">Somun malzemesi
+          <select id="nhard"><option value="std">Standart çelik (8.8 / 2H, ≤ HRC 38)</option><option value="hard">Sert (10.9 / 12.9, ≤ HRC 44)</option><option value="ss">Paslanmaz</option></select></label>
+        <label for="nacc">Erişim<select id="nacc"><option value="open">Serbest</option><option value="tight">Dar (flanş, komşu somun yakın)</option></select></label>
+      </form>
+    </section>
+    <section class="panel out">
+      <h2 id="ntitle"></h2>
+      <svg class="viz" id="nsvg" viewBox="0 0 600 70" role="img" aria-label="Somun ağzı aralıkları"></svg>
+      <div class="kpis" id="nk"></div>
+      <ul class="notes" id="nnt"></ul>
+      <div class="tbl"><table id="ntbl"></table></div>
+    </section>
+  </div>
+
+  <div class="grid" id="paneP" hidden>
+    <section class="panel">
+      <form novalidate>
+        <label for="shaft">Mil çapı (mm)<input id="shaft" type="number" min="5" step="1" value="80"></label>
+        <div class="row">
+          <label for="span">Parça dış çapı (mm)<input id="span" type="number" min="10" step="1" value="170"><span class="hint">Kolların açılması gereken çap</span></label>
+          <label for="reach">Çekme derinliği (mm)<input id="reach" type="number" min="10" step="1" value="120"><span class="hint">Tutma noktasından mil ucuna</span></label>
+        </div>
+        <label for="fit">Geçme durumu
+          <select id="fit"><option value="1">Normal sıkı geçme</option><option value="1.5" selected>Paslı / uzun süre çalışmış</option><option value="2">Ağır sıkı geçme / ısıl geçme</option></select></label>
+        <label for="force">Gerekli kuvvet (ton) — elle düzeltmek için<input id="force" type="number" min="1" step="any" placeholder="otomatik"></label>
+        <label for="arms">Kol sayısı<select id="arms"><option value="any">Fark etmez</option><option value="2">2 kollu</option><option value="3">3 kollu</option></select></label>
+      </form>
+    </section>
+    <section class="panel out">
+      <h2 id="ptitle"></h2>
+      <svg class="viz" id="psvg" viewBox="0 0 600 200" role="img" aria-label="Çektirme şeması"></svg>
+      <div class="kpis" id="pk"></div>
+      <ul class="notes" id="pnt"></ul>
+      <div class="tbl"><table id="ptbl"></table></div>
+    </section>
+  </div>
+  <p class="note" style="margin-top:14px">Model listeleri örnek katalogdur; dosyadaki <code>KIRICILAR</code> ve <code>CEKTIRMELER</code> dizilerine kendi ürünlerinizi girin. Çektirme kuvveti tahmini (mil çapı mm ÷ 10 × geçme katsayısı ton) kaba bir saha kuralıdır; kesin değer için parçanın geçme toleransı esas alınmalıdır.</p>
+</div>
+<script src="assets/ayarlar.js"></script>
+<script src="assets/ortak.js"></script>
+<script>
+// ---- ÖRNEK KATALOGLAR ----
+const KIRICILAR=[
+  {kod:"NS-1",af:[10,19],civata:"M6–M12",ton:5,yag:7,hrc:44},{kod:"NS-2",af:[19,27],civata:"M12–M16",ton:10,yag:15,hrc:44},
+  {kod:"NS-3",af:[27,36],civata:"M16–M24",ton:15,yag:25,hrc:44},{kod:"NS-4",af:[36,46],civata:"M24–M30",ton:20,yag:45,hrc:44},
+  {kod:"NS-5",af:[46,60],civata:"M30–M39",ton:30,yag:80,hrc:44},{kod:"NS-6",af:[60,75],civata:"M39–M48",ton:45,yag:140,hrc:44},
+  {kod:"NS-7",af:[75,95],civata:"M48–M64",ton:60,yag:230,hrc:44}
+];
+const CEKTIRMELER=[
+  {kod:"PL-5",ton:5,acik:[25,160],der:120,kol:[2,3]},{kod:"PL-10",ton:10,acik:[40,250],der:180,kol:[2,3]},
+  {kod:"PL-20",ton:20,acik:[50,350],der:250,kol:[2,3]},{kod:"PL-30",ton:30,acik:[70,480],der:300,kol:[3]},
+  {kod:"PL-50",ton:50,acik:[100,600],der:380,kol:[3]},{kod:"PL-100",ton:100,acik:[150,800],der:500,kol:[3]}
+];
+const tab=n=>{$('tabN').setAttribute('aria-pressed',n==='N');$('tabP').setAttribute('aria-pressed',n==='P');$('paneN').hidden=n!=='N';$('paneP').hidden=n!=='P';};
+$('tabN').onclick=()=>tab('N'); $('tabP').onclick=()=>tab('P');
+try{ if(location.hash==='#cektirme') tab('P'); }catch(e){}
+
+function nsizes(){const s=$('nsys').value,l=s==='M'?MET:INC;$('nsize').innerHTML=l.map((r,i)=>`<option value="${i}">${r[0]}</option>`).join('');$('nsize').value=s==='M'?9:5;$('naf').value=bolt(s,+$('nsize').value).af;}
+function calcN(){
+  const af=+$('naf').value, hard=$('nhard').value, tight=$('nacc').value==='tight';
+  const g=KIRICILAR.find(k=>af>=k.af[0]&&af<=k.af[1]&&(k.af[1]!==af||KIRICILAR.indexOf(k)===KIRICILAR.length-1))||KIRICILAR.find(k=>af>=k.af[0]&&af<=k.af[1]);
+  const W=600,mn=8,mx=100,sc=v=>(v-mn)/(mx-mn)*(W-10);
+  let s=KIRICILAR.map(k=>`<rect x="${sc(k.af[0]).toFixed(1)}" y="10" width="${(sc(k.af[1])-sc(k.af[0])-2).toFixed(1)}" height="26" fill="${k===g?'var(--accent)':'var(--steel-2)'}"/><text x="${((sc(k.af[0])+sc(k.af[1]))/2).toFixed(1)}" y="28" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="${k===g?'var(--accent-ink)':'var(--fg)'}">${k.kod}</text>`).join('');
+  if(af>=mn&&af<=mx) s+=`<line x1="${sc(af)}" y1="4" x2="${sc(af)}" y2="44" stroke="var(--fg)" stroke-width="2"/><text x="${Math.min(sc(af),W-60)}" y="60" font-family="var(--mono)" font-size="11" fill="var(--fg)">${af} mm</text>`;
+  $('nsvg').innerHTML=s;
+  if(!g){$('ntitle').textContent='Uygun kırıcı yok';$('nk').innerHTML='';notes('nnt',[`${af} mm somun ağzı listedeki aralık dışında (10–95 mm).`]);$('ntbl').innerHTML='';return}
+  $('ntitle').textContent=`${g.kod} · ${g.af[0]}–${g.af[1]} mm ağız`;
+  kpis('nk',[[g.ton+' t','Kesme kuvveti'],[g.civata,'Cıvata aralığı'],[g.yag+' cm³','Yağ ihtiyacı'],['700 bar','Pompa basıncı']]);
+  const n=['Tek etkili; küçük bir el pompası (0,7 L depo) yeterlidir.','Somunu iki karşılıklı yüzden kesin: ilk kesimden sonra kırıcıyı 180° çevirip ikinci kesimi yapın. Cıvata dişleri korunur.'];
+  if(hard==='hard') n.unshift(pill(0,'Dikkat')+' Sert somunlarda bıçak aşınması hızlanır; yedek bıçak bulundurun. HRC 44 üstü için özel bıçak gerekir.');
+  if(hard==='ss') n.unshift('Paslanmaz somunlar yapışmaya (galling) yatkındır; kesimde bıçağı yağlayın.');
+  if(tight) n.push('Dar alanda kırıcı gövdesinin flanş yüzeyine çarpmaması için açılı (offset) kafa tercih edin.');
+  notes('nnt',n);
+  $('ntbl').innerHTML='<tr><th>Model</th><th>Ağız</th><th>Cıvata</th><th>Kuvvet</th></tr>'+KIRICILAR.map(k=>`<tr class="${k===g?'sel':''}"><td class="n">${k.kod}</td><td class="n">${k.af[0]}–${k.af[1]} mm</td><td class="n">${k.civata}</td><td class="n">${k.ton} t</td></tr>`).join('');
+}
+function calcP(){
+  const shaft=+$('shaft').value, span=+$('span').value, reach=+$('reach').value, fit=+$('fit').value, arms=$('arms').value;
+  const auto=shaft/10*fit, F=+$('force').value||auto;
+  const ok=CEKTIRMELER.filter(c=>c.ton>=F&&span>=c.acik[0]&&span<=c.acik[1]&&reach<=c.der&&(arms==='any'||c.kol.includes(+arms)));
+  const g=ok[0];
+  // şema
+  const cx=300, sw=Math.min(260,span*0.8), dp=Math.min(130,reach*0.6), top=30;
+  let s=`<rect x="${cx-sw/2-20}" y="${top}" width="${sw+40}" height="16" fill="var(--steel)"/>`;
+  s+=`<rect x="${cx-18}" y="${top-24}" width="36" height="30" rx="3" fill="${g?'var(--accent)':'var(--steel-2)'}" stroke="var(--fg)"/>`;
+  s+=`<path d="M${cx-sw/2-14} ${top+16} V${top+16+dp} h14 M${cx+sw/2+14} ${top+16} V${top+16+dp} h-14" stroke="var(--fg)" stroke-width="6" fill="none"/>`;
+  s+=`<rect x="${cx-sw/2}" y="${top+16+dp-22}" width="${sw}" height="22" fill="var(--steel-2)" stroke="var(--fg)"/>`;
+  s+=`<rect x="${cx-Math.min(40,shaft*0.3)}" y="${top+16+dp-22}" width="${Math.min(80,shaft*0.6)}" height="${200-(top+16+dp-22)}" fill="var(--panel)" stroke="var(--fg)"/>`;
+  s+=`<line x1="${cx}" y1="${top+16}" x2="${cx}" y2="${top+16+dp-22}" stroke="var(--fg)" stroke-dasharray="4 3"/>`;
+  s+=`<text x="${cx+sw/2+28}" y="${top+16+dp/2}" font-family="var(--mono)" font-size="11" fill="var(--muted)">derinlik ${reach} mm</text>`;
+  s+=`<text x="${cx}" y="${top+16+dp+14}" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--fg)">Ø ${span} mm</text>`;
+  $('psvg').innerHTML=s;
+  kpis('pk',[[fmt(F,1)+' t','Gerekli kuvvet'+($('force').value?'':' (tahmini)')],[fmt(F*1.3,0)+' t','Önerilen min. kapasite'],[g?g.ton+' t':'–','Seçilen çektirme']]);
+  const n=[];
+  if(!g){ $('ptitle').textContent='Uygun çektirme yok';
+    const byF=CEKTIRMELER.filter(c=>c.ton>=F);
+    n.push(!byF.length?`${fmt(F,1)} t için listede çektirme yok; çektirme tablası (bearing splitter) ile hidrolik silindir kombinasyonu kullanın.`
+      :span>Math.max(...byF.map(c=>c.acik[1]))?`${span} mm dış çap kol açıklığını aşıyor; çektirme tablası veya özel kol kullanın.`
+      :`${reach} mm derinlik için kollar kısa; uzatma kolu gerekli.`);
+  } else {
+    $('ptitle').textContent=`${g.kod} · ${g.ton} t, ${g.kol.join('/')} kollu`;
+    n.push(g.ton>=F*1.3?pill(1,'Uygun')+' Kapasitede yeterli pay var.':pill(0,'Sınırda')+' Kapasite payı %30\'un altında; bir üst model daha güvenli.');
+    n.push('Çekme sırasında kolların kaymaması için güvenlik zinciri veya kafes kullanın; parçanın aniden kurtulmasına karşı çevreyi boşaltın.');
+    if(fit>=2) n.push('Isıl geçmede parçayı çekmeden önce dıştan ısıtmak gereken kuvveti belirgin şekilde azaltır.');
+  }
+  notes('pnt',n);
+  $('ptbl').innerHTML='<tr><th>Model</th><th>Kapasite</th><th>Açıklık</th><th>Derinlik</th><th>Kol</th></tr>'+CEKTIRMELER.map(c=>`<tr class="${c===g?'sel':''}"><td class="n">${c.kod}</td><td class="n">${c.ton} t</td><td class="n">${c.acik[0]}–${c.acik[1]} mm</td><td class="n">${c.der} mm</td><td class="n">${c.kol.join('/')}</td></tr>`).join('');
+}
+$('nsys').addEventListener('change',()=>{nsizes();calcN()});
+$('nsize').addEventListener('change',()=>{$('naf').value=bolt($('nsys').value,+$('nsize').value).af;calcN()});
+nsizes(); live(['naf','nhard','nacc'],calcN); live(['shaft','span','reach','fit','force','arms'],calcP);
+</script>
+
+</body>
+</html>

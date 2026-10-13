@@ -100,4 +100,23 @@ return [
         'editor' => ['label' => 'Editör', 'level' => 50],
         'author' => ['label' => 'Yazar', 'level' => 30],
     ],
+
+    /*
+    |---------------------------------------------------------------------------
+    | Teklif sepeti
+    |---------------------------------------------------------------------------
+    | Fiyat göstermeyen kataloglarda ziyaretçi ürünleri sepete toplar ve tek
+    | formla teklif ister. `form_key` ile belirtilen form gönderildiğinde
+    | sepetteki ürünler mesaja eklenir. Form panelde yoksa sepet hiç görünmez.
+    */
+
+    'quote' => [
+        'form_key' => env('CMS_QUOTE_FORM', 'teklif'),
+
+        // Sepete eklenebilecek içerik türleri.
+        'content_types' => ['urunler'],
+
+        'max_lines' => 50,
+        'max_quantity' => 999,
+    ],
 ];

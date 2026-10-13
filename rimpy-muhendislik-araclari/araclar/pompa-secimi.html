@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hidrolik Pompa Seçimi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/ortak.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Hidrolik Pompa Seçimi</h1>
+    <p>Bağlanacak aletleri, istenen çalışma süresini ve sahadaki enerji kaynağını girin. Gerekli debi, depo hacmi ve uygun pompa modeli hesaplanır.</p>
+  </header>
+  <div class="grid">
+    <section class="panel">
+      <form novalidate>
+        <label for="tool">Bağlanacak alet
+          <select id="tool">
+            <option value="cylSA">Tek etkili silindir</option>
+            <option value="cylDA">Çift etkili silindir</option>
+            <option value="wrench">Hidrolik tork anahtarı</option>
+            <option value="nut">Somun kırıcı / çektirme</option>
+          </select>
+        </label>
+        <div class="row">
+          <label for="n">Alet adedi<input id="n" type="number" min="1" max="16" step="1" value="4"></label>
+          <label for="cap">Kapasite (ton)<input id="cap" type="number" min="1" step="any" value="50"></label>
+        </div>
+        <label for="stroke">Strok (mm)<input id="stroke" type="number" min="1" step="1" value="150"></label>
+        <label for="t">İstenen tam strok süresi (saniye)<input id="t" type="number" min="5" step="5" value="90"></label>
+        <label for="src">Enerji kaynağı
+          <select id="src">
+            <option value="any">Fark etmez</option>
+            <option value="none">Enerji yok (el pompası)</option>
+            <option value="1f">230 V monofaze</option>
+            <option value="3f">400 V trifaze</option>
+            <option value="air">Basınçlı hava (6–7 bar)</option>
+          </select>
+        </label>
+        <label for="ex">Ortam
+          <select id="ex"><option value="std">Standart saha / atölye</option><option value="atex">Patlayıcı ortam (rafineri, platform)</option></select>
+        </label>
+        <div class="err" id="err" role="alert"></div>
+      </form>
+    </section>
+    <section class="panel out">
+      <h2 id="title">Önerilen pompa</h2>
+      <div class="big"><b id="flow">–</b><span id="flowsub"></span></div>
+      <svg class="viz" id="svg" viewBox="0 0 600 120" role="img" aria-label="Pompa karşılaştırma çubukları"></svg>
+      <div class="kpis" id="k"></div>
+      <div class="tbl"><table id="tbl"></table></div>
+      <ul class="notes" id="nt"></ul>
+      <p class="note">Silindir yağ hacmi 700 bar'a göre etkin alandan hesaplanır (alan = kapasite ÷ 700 bar). Pompa listesi örnek katalogdur; dosyadaki <code>POMPALAR</code> dizisine kendi ürünlerinizi girin.</p>
+    </section>
+  </div>
+</div>
+<script src="assets/ayarlar.js"></script>
+<script src="assets/ortak.js"></script>
+<script>
+// ---- ÖRNEK KATALOG ---- debi: 700 bar'da L/dk (el pompası için strok başına cm³ ve dakikada ~30 strok)
+const POMPALAR=[
+  {kod:"PH-07",ad:"El pompası, tek kademe",kaynak:"none",depo:0.7,debi:0.03,cikis:1,cift:false,atex:true},
+  {kod:"PH-25",ad:"El pompası, iki kademe",kaynak:"none",depo:2.5,debi:0.08,cikis:1,cift:false,atex:true},
+  {kod:"PH-25D",ad:"El pompası, çift etkili",kaynak:"none",depo:2.5,debi:0.08,cikis:1,cift:true,atex:true},
+  {kod:"PA-04",ad:"Havalı pompa",kaynak:"air",depo:2,debi:0.25,cikis:1,cift:false,atex:true},
+  {kod:"PA-10D",ad:"Havalı pompa, 4/3 valf",kaynak:"air",depo:10,debi:0.9,cikis:1,cift:true,atex:true},
+  {kod:"PE-05",ad:"Elektrikli, 0,55 kW",kaynak:"1f",depo:4,debi:0.35,cikis:1,cift:false,atex:false},
+  {kod:"PE-07D",ad:"Elektrikli, 0,75 kW, 4/3 valf",kaynak:"1f",depo:10,debi:0.6,cikis:1,cift:true,atex:false},
+  {kod:"PE-15D",ad:"Elektrikli, 1,5 kW, 4/3 valf",kaynak:"3f",depo:20,debi:1.2,cikis:1,cift:true,atex:false},
+  {kod:"PE-30M",ad:"Elektrikli, 3 kW, 4 çıkışlı manifold",kaynak:"3f",depo:40,debi:2.2,cikis:4,cift:true,atex:false},
+  {kod:"PE-55M",ad:"Elektrikli, 5,5 kW, 8 çıkışlı",kaynak:"3f",depo:80,debi:4.2,cikis:8,cift:true,atex:false}
+];
+function calc(){
+  const tool=$('tool').value, n=+$('n').value, cap=+$('cap').value, st=+$('stroke').value, t=+$('t').value, src=$('src').value, atex=$('ex').value==='atex';
+  if(!(n>=1&&cap>0&&st>0&&t>0)){$('err').textContent='Tüm değerler sıfırdan büyük olmalı.';return}
+  $('err').textContent='';
+  const area=cap*9806.65/(700*10);           // cm²
+  let vol=area*st/10/1000*n;                  // L
+  if(tool==='wrench') vol=n*0.12;            // tork anahtarı: tur başı az yağ, sürekli çevrim
+  const needFlow = tool==='wrench' ? 0.6*Math.min(n,4)/2 : vol/(t/60);
+  const needDepo = tool==='wrench' ? 4 : vol*1.3+0.3;
+  const needDA = tool==='cylDA'||tool==='wrench';
+  let pool=POMPALAR.filter(p=>(src==='any'||p.kaynak===src||(src==='3f'&&p.kaynak==='1f'))&&(!needDA||p.cift)&&p.depo>=needDepo&&(!atex||p.atex));
+  pool.sort((a,b)=>Math.abs(Math.log((a.debi)/needFlow))-Math.abs(Math.log((b.debi)/needFlow)));
+  const ok=pool.filter(p=>p.debi>=needFlow*0.8); const pick=(ok.length?ok.sort((a,b)=>a.debi-b.debi)[0]:pool.sort((a,b)=>b.debi-a.debi)[0]);
+  $('flow').textContent=fmt(needFlow,2)+' L/dk'; $('flowsub').textContent='700 bar\'da gerekli debi';
+  if(!pick){$('title').textContent='Uygun pompa yok';$('tbl').innerHTML='';$('k').innerHTML='';$('svg').innerHTML='';
+    notes('nt',[`${fmt(needDepo,1)} L depo${needDA?' ve çift etkili valf':''} gereken bu set için seçilen enerji kaynağında model yok. ${atex?'Patlayıcı ortamda havalı veya el pompası kullanılır; ':''}Enerji kaynağını değiştirin veya seti bölün.`]);return}
+  const tReal=vol/pick.debi*60;
+  $('title').textContent=`${pick.kod} · ${pick.ad}`;
+  kpis('k',[[fmt(vol,2)+' L','Set yağ ihtiyacı'],[fmt(needDepo,1)+' L','Min. kullanılabilir depo'],[tool==='wrench'?'Sürekli':fmt(tReal)+' sn','Tahmini strok süresi'],[pick.cikis+' çıkış','Pompa çıkışı']]);
+  const show=POMPALAR.filter(p=>p.depo>=needDepo&&(!needDA||p.cift)).slice(0,6);
+  const mx=Math.max(needFlow,...show.map(p=>p.debi))*1.1, W=600, rh=120/(show.length+1);
+  let s=''; [...show].forEach((p,i)=>{const w=(W-150)*p.debi/mx, y=i*rh+4;
+    s+=`<text x="0" y="${y+rh*0.62}" font-family="var(--mono)" font-size="11" fill="var(--fg)">${p.kod}</text><rect x="70" y="${y}" width="${w.toFixed(1)}" height="${rh*0.72}" fill="${p===pick?'var(--accent)':'var(--steel-2)'}"/><text x="${76+w}" y="${y+rh*0.62}" font-family="var(--mono)" font-size="10" fill="var(--muted)">${fmt(p.debi,2)}</text>`});
+  const lx=70+(W-150)*needFlow/mx; s+=`<line x1="${lx}" y1="0" x2="${lx}" y2="${show.length*rh+4}" stroke="var(--fg)" stroke-dasharray="4 3"/><text x="${lx+4}" y="${show.length*rh+16}" font-family="var(--body)" font-size="11" fill="var(--fg)">gerekli ${fmt(needFlow,2)} L/dk</text>`;
+  $('svg').setAttribute('viewBox',`0 0 ${W} ${show.length*rh+22}`); $('svg').innerHTML=s;
+  $('tbl').innerHTML='<tr><th>Model</th><th>Tahrik</th><th>Debi</th><th>Depo</th><th>Valf</th></tr>'+pool.slice(0,5).map(p=>`<tr class="${p===pick?'sel':''}"><td class="n">${p.kod}</td><td>${p.ad}</td><td class="n">${fmt(p.debi,2)} L/dk</td><td class="n">${p.depo} L</td><td>${p.cift?'4/3 çift etkili':'3/2 tek etkili'}</td></tr>`).join('');
+  const nt=[];
+  nt.push(pick.debi>=needFlow*0.8?pill(1,'Uygun')+` ${pick.kod} istenen hıza yakın çalışır.`:pill(0,'Yavaş')+` En güçlü uygun model bile hedef süreyi tutturamaz; tahmini süre ${fmt(tReal)} sn.`);
+  if(n>pick.cikis) nt.push(`${n} alet için ${n} çıkışlı dağıtım manifoldu gerekir.`);
+  if(tool==='wrench') nt.push('Tork anahtarı için iki kademeli, 4/3 valfli ve uzaktan kumandalı pompa kullanın. Debi, tur başına sıkma hızını belirler.');
+  if(atex) nt.push('Patlayıcı ortamda yalnızca ATEX uygun havalı veya el pompası kullanılmalıdır.');
+  if(vol>pick.depo*0.8) nt.push('Yağ ihtiyacı depoya çok yakın; silindirleri tam açmadan önce seviyeyi kontrol edin.');
+  notes('nt',nt);
+}
+live(['tool','n','cap','stroke','t','src','ex'],calc);
+</script>
+
+</body>
+</html>

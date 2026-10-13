@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kirala mı Satın Al mı</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/ortak.css">
+<style>
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:6px}
+.verdict{border-left:4px solid var(--accent);padding:4px 0 4px 12px;font-size:1.02rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Kirala mı, Satın Al mı?</h1>
+    <p>Ekipmanı ne sıklıkla ve ne kadar süre kullanacağınızı girin. Kiralama ve satın alma maliyetleri yıllara yayılarak karşılaştırılır, başabaş noktası hesaplanır.</p>
+  </header>
+  <div class="grid">
+    <section class="panel">
+      <form novalidate>
+        <label for="set">Ekipman seti<select id="set"></select></label>
+        <div class="row">
+          <label for="cur">Para birimi<select id="cur"><option>EUR</option><option>USD</option><option>TRY</option></select></label>
+          <label for="price">Satın alma fiyatı<input id="price" type="number" min="0" step="any"></label>
+        </div>
+        <span class="hint">Hazır fiyatlar örnektir ve para birimi değişince sabit bir örnek kurla çevrilir. Güncel fiyatlarınızı girin.</span>
+        <div class="row">
+          <label for="rd">Kira / gün<input id="rd" type="number" min="0" step="any"></label>
+          <label for="rw">Kira / hafta<input id="rw" type="number" min="0" step="any"></label>
+        </div>
+        <label for="rm">Kira / ay<input id="rm" type="number" min="0" step="any"></label>
+        <div class="row">
+          <label for="jobs">Yılda iş sayısı<input id="jobs" type="number" min="0" step="1" value="4"></label>
+          <label for="days">İş başı gün<input id="days" type="number" min="1" step="1" value="6"></label>
+        </div>
+        <div class="row">
+          <label for="mob">Kiralamada nakliye / iş<input id="mob" type="number" min="0" step="any" value="150"></label>
+          <label for="yrs">Değerlendirme süresi (yıl)<input id="yrs" type="number" min="1" max="10" value="5"></label>
+        </div>
+        <details>
+          <summary style="cursor:pointer;font-weight:600;margin-bottom:8px">Satın alma maliyet varsayımları</summary>
+          <div style="display:grid;gap:12px">
+            <div class="row">
+              <label for="maint">Yıllık bakım (% fiyat)<input id="maint" type="number" min="0" step="0.5" value="4"></label>
+              <label for="cal">Yıllık kalibrasyon<input id="cal" type="number" min="0" step="any" value="350"></label>
+            </div>
+            <div class="row">
+              <label for="resid">Süre sonu ikinci el değeri (%)<input id="resid" type="number" min="0" max="90" value="30"></label>
+              <label for="rate">Sermaye maliyeti (% / yıl)<input id="rate" type="number" min="0" step="0.5" value="8"></label>
+            </div>
+            <span class="hint">Kiralamada bakım, kalibrasyon ve arıza riski kiraya dahildir.</span>
+          </div>
+        </details>
+        <div id="contactSlot"></div>
+      </form>
+    </section>
+    <section class="panel out">
+      <h2 id="title"></h2>
+      <div class="verdict" id="verdict"></div>
+      <div class="kpis" id="k"></div>
+      <div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Satın alma (kümülatif net)</span><span><i style="background:var(--steel)"></i>Kiralama (kümülatif)</span></div>
+        <svg class="viz" id="svg" viewBox="0 0 640 260" role="img" aria-label="Kümülatif maliyet grafiği"></svg>
+      </div>
+      <div class="tbl"><table id="tbl"></table></div>
+      <ul class="notes" id="nt"></ul>
+      <p class="note">Fiyatlar örnek değerlerdir; dosyadaki <code>SETLER</code> listesine güncel satış ve kira fiyatlarınızı girin. Kira, her iş için en ekonomik gün / hafta / ay kombinasyonuyla hesaplanır. Satın almada fiyat, bakım, kalibrasyon ve sermaye maliyeti toplanır; süre sonundaki ikinci el değeri düşülür.</p>
+    </section>
+  </div>
+</div>
+<script src="assets/ayarlar.js"></script>
+<script src="assets/ortak.js"></script>
+<script>
+// ---- ÖRNEK FİYAT LİSTESİ (EUR) — kendi fiyatlarınızla değiştirin ----
+const SETLER=[
+  {ad:'Tork anahtarı seti (RL-6 + elektrikli pompa + hortum)',fiyat:9500,gun:95,hafta:380,ay:1100},
+  {ad:'Tork anahtarı seti, 2 anahtarlı (RL-8 ×2 + 4 çıkışlı pompa)',fiyat:19800,gun:190,hafta:760,ay:2200},
+  {ad:'Cıvata germe seti (BT-3 ×4 + 1500 bar pompa)',fiyat:22000,gun:220,hafta:880,ay:2600},
+  {ad:'Silindir seti (4 × 50 t kilit somunlu + pompa + manifold)',fiyat:14000,gun:140,hafta:560,ay:1650},
+  {ad:'Somun kırıcı seti (NS-3/4/5 + el pompası)',fiyat:2400,gun:30,hafta:120,ay:340},
+  {ad:'Özel (değerleri elle girin)',fiyat:10000,gun:100,hafta:400,ay:1150}
+];
+const KUR={EUR:1,USD:1.08,TRY:36};   // örnek kur — yalnızca hazır fiyatları çevirmek için; güncel kuru girin
+$('set').innerHTML=SETLER.map((s,i)=>`<option value="${i}">${s.ad}</option>`).join('');
+function loadSet(){const s=SETLER[+$('set').value], k=KUR[$('cur').value];
+  $('price').value=Math.round(s.fiyat*k); $('rd').value=Math.round(s.gun*k); $('rw').value=Math.round(s.hafta*k); $('rm').value=Math.round(s.ay*k); calc();}
+// bir iş için en ucuz kira: ay/hafta/gün kombinasyonu (DP)
+function rent(days,d,w,m){ const best=[0]; for(let i=1;i<=days;i++){ best[i]=Math.min(best[i-1]+d, best[Math.max(0,i-7)]+w, best[Math.max(0,i-30)]+m); } return best[days]; }
+let R=null;
+function calc(){
+  const v=id=>+$(id).value||0, cur=$('cur').value;
+  const price=v('price'),d=v('rd'),w=v('rw')||d*7,m=v('rm')||d*30,jobs=v('jobs'),days=Math.max(1,v('days')),mob=v('mob'),yrs=Math.max(1,v('yrs'));
+  const maint=v('maint')/100*price, cal=v('cal'), resid=v('resid')/100*price, rate=v('rate')/100;
+  const perJob=rent(days,d,w,m)+mob, rentYear=perJob*jobs, buyYear=maint+cal+price*rate;
+  const rentTot=rentYear*yrs, buyTot=price+buyYear*yrs-resid;
+  // başabaş: yılda kaç iş
+  const be=(price-resid)/yrs+buyYear; const beJobs=perJob>0?be/perJob:Infinity;
+  const money=x=>fmt(x)+' '+cur;
+  // aylık kümülatif seri
+  const M=yrs*12, buyS=[], rentS=[]; let rc=0, jobsDone=0;
+  for(let i=0;i<=M;i++){ const due=Math.floor(jobs*i/12+1e-9); while(jobsDone<due){rc+=perJob;jobsDone++;} rentS.push(rc);
+    buyS.push(price+buyYear*i/12-(i===M?resid:0)); }
+  let cross=-1; for(let i=1;i<=M;i++) if(rentS[i]>=buyS[i]&&rentS[i-1]<buyS[i-1]){cross=i;break;}
+  R={price,perJob,rentTot,buyTot,beJobs,jobs,days,yrs,cur,cross};
+  const win=buyTot<rentTot?'buy':'rent', diff=Math.abs(rentTot-buyTot);
+  $('title').textContent=SETLER[+$('set').value].ad.split('(')[0].trim();
+  $('verdict').innerHTML= win==='rent'
+    ? `<b>Kiralamak daha ekonomik.</b> ${yrs} yılda ${money(diff)} tasarruf. Yılda ${fmt(beJobs,1)} işin üzerine çıkarsanız satın alma öne geçer.`
+    : `<b>Satın almak daha ekonomik.</b> ${yrs} yılda ${money(diff)} tasarruf${cross>0?`; satın alma ${Math.ceil(cross)}. ayda kendini amorti eder`:''}. Yılda ${fmt(beJobs,1)} işin altında kiralama daha uygundur.`;
+  kpis('k',[[money(perJob),'İş başı kira (nakliye dahil)'],[money(rentTot),`${yrs} yıl kiralama`],[money(buyTot),`${yrs} yıl satın alma (net)`],[fmt(beJobs,1)+' iş/yıl','Başabaş kullanım'],[fmt(jobs*days),'Yıllık kullanım günü']]);
+  // grafik
+  const W=640,H=260,pl=70,pr=12,pt=10,pb=34, mx=Math.max(...buyS,...rentS)*1.08||1;
+  const X=i=>pl+(W-pl-pr)*i/M, Y=v=>pt+(H-pt-pb)*(1-v/mx);
+  const nice=(()=>{const raw=mx/4,p=Math.pow(10,Math.floor(Math.log10(raw))),n=raw/p;return (n<=1?1:n<=2?2:n<=5?5:10)*p;})();
+  let s=''; for(let y=0;y<=mx;y+=nice){ s+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(y).toFixed(1)}" y2="${Y(y).toFixed(1)}" stroke="var(--line)"/><text x="${pl-6}" y="${(Y(y)+4).toFixed(1)}" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--muted)">${y>=1e6?fmt(y/1e6,1)+'M':y>=1e3?fmt(y/1e3)+'k':fmt(y)}</text>`;}
+  for(let yr=0;yr<=yrs;yr++){ s+=`<text x="${X(yr*12).toFixed(1)}" y="${H-14}" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--muted)">${yr}. yıl</text>`;}
+  const path=a=>a.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+  s+=`<path d="${path(rentS)}" fill="none" stroke="var(--steel)" stroke-width="2.5"/>`;
+  s+=`<path d="${path(buyS)}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
+  if(cross>0){ s+=`<circle cx="${X(cross).toFixed(1)}" cy="${Y(buyS[cross]).toFixed(1)}" r="5" fill="var(--fg)"/><text x="${Math.min(X(cross)+8,W-110).toFixed(1)}" y="${(Y(buyS[cross])-10).toFixed(1)}" font-family="var(--body)" font-size="11" font-weight="600" fill="var(--fg)">amorti: ${cross}. ay</text>`;}
+  s+=`<circle cx="${X(M)}" cy="${Y(buyS[M]).toFixed(1)}" r="3.5" fill="var(--accent)"/><circle cx="${X(M)}" cy="${Y(rentS[M]).toFixed(1)}" r="3.5" fill="var(--steel)"/>`;
+  $('svg').innerHTML=s;
+  // senaryo tablosu
+  const sc=[1,2,4,6,8,12].filter(j=>j!==jobs).concat([jobs]).sort((a,b)=>a-b);
+  $('tbl').innerHTML='<tr><th>Yılda iş</th><th>Kiralama</th><th>Satın alma</th><th>Avantaj</th></tr>'+sc.map(j=>{const rt=perJob*j*yrs; const a=rt<buyTot;
+    return `<tr class="${j===jobs?'sel':''}"><td class="n">${j}</td><td class="n">${money(rt)}</td><td class="n">${money(buyTot)}</td><td>${a?pill(1,'Kirala'):pill(0,'Satın al')} ${money(Math.abs(rt-buyTot))}</td></tr>`}).join('');
+  const n=[];
+  if(win==='rent') n.push('Kiralamada kalibrasyonlu, bakımlı ekipman teslim alınır; arıza durumunda yedek set sağlanır.');
+  else n.push('Satın almada ekipman her an hazırdır; acil duruş ve planlı bakımlarda bekleme olmaz.');
+  if(Math.abs(jobs-beJobs)<1.5) n.push(pill(0,'Sınırda')+' Kullanımınız başabaş noktasına çok yakın. Önce kiralayıp kullanım sıklığını gözlemlemek riski azaltır.');
+  if(days>=25) n.push('Uzun işlerde aylık kira tarifesi uygulanır; proje süresine göre özel fiyat için teklif isteyin.');
+  n.push('Kiralama sonrası satın alma seçeneği için ödenen kiranın bir kısmının fiyattan düşülmesi konusunda satış ekibiyle görüşebilirsiniz.');
+  notes('nt',n);
+}
+$('set').addEventListener('change',loadSet); $('cur').addEventListener('change',loadSet);
+loadSet(); live(['price','rd','rw','rm','jobs','days','mob','yrs','maint','cal','resid','rate'],calc);
+wireContact(()=>({title:'Kiralama / Satın Alma Analizi',prefix:'KSA',
+  data:{set:SETLER[+$('set').value].ad,yillik_is:R.jobs,is_basi_gun:R.days,sure_yil:R.yrs,kira_toplam:Math.round(R.rentTot),satin_alma_net:Math.round(R.buyTot),basabas_is_yil:+R.beJobs.toFixed(1),para:R.cur},
+  html:'<h2>Sonuç</h2><p>'+$('verdict').textContent+'</p>'+tableHTML(['Kalem','Değer'],[...document.querySelectorAll('#k .kpi')].map(k=>[k.querySelector('span').textContent,k.querySelector('b').textContent]))+
+   '<h2>Kümülatif maliyet</h2>'+$('svg').outerHTML.replace(/var\(--accent\)/g,'#e2661c').replace(/var\(--steel\)/g,'#8794a0').replace(/var\(--line\)/g,'#ddd').replace(/var\(--muted\)/g,'#555').replace(/var\(--fg\)/g,'#000')+
+   '<h2>Senaryolar</h2>'+tableHTML(['Yılda iş','Kiralama','Satın alma','Avantaj'],[...document.querySelectorAll('#tbl tr')].slice(1).map(r=>[...r.cells].map(c=>c.textContent)))+
+   '<h2>Varsayımlar</h2>'+tableHTML(['Parametre','Değer'],[['Set',SETLER[+$('set').value].ad],['Satın alma fiyatı',$('price').value+' '+R.cur],['Kira gün / hafta / ay',`${$('rd').value} / ${$('rw').value} / ${$('rm').value} ${R.cur}`],['Nakliye / iş',$('mob').value+' '+R.cur],['Yıllık bakım',$('maint').value+' %'],['Yıllık kalibrasyon',$('cal').value+' '+R.cur],['İkinci el değeri',$('resid').value+' %'],['Sermaye maliyeti',$('rate').value+' % / yıl']])}));
+</script>
+
+</body>
+</html>

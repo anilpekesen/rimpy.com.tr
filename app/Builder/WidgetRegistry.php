@@ -39,6 +39,22 @@ class WidgetRegistry
         Widgets\LanguageSwitcherWidget::class,
         Widgets\BreadcrumbWidget::class,
         Widgets\TemplateWidget::class,
+        Widgets\QuoteCartWidget::class,
+        Widgets\Showcase\HeroGaugeWidget::class,
+        Widgets\Showcase\CategoryTilesWidget::class,
+        Widgets\Showcase\ProductGridWidget::class,
+        Widgets\Showcase\StepsWidget::class,
+        Widgets\Showcase\ServiceRailWidget::class,
+        Widgets\Showcase\StatBandWidget::class,
+        Widgets\Showcase\IndustryTabsWidget::class,
+        Widgets\Showcase\TrustGridWidget::class,
+        Widgets\Showcase\CtaBandWidget::class,
+        Widgets\Showcase\TorqueCalculatorWidget::class,
+        Widgets\Showcase\CylinderSelectorWidget::class,
+        Widgets\Showcase\UnitConverterWidget::class,
+        Widgets\Showcase\FlangeSequenceWidget::class,
+        Widgets\Showcase\SpecWriterWidget::class,
+        Widgets\Showcase\BoltTensionerWidget::class,
     ];
 
     public const CATEGORIES = [
@@ -48,6 +64,8 @@ class WidgetRegistry
         'content' => 'İçerik',
         'form' => 'Form',
         'site' => 'Site Öğeleri',
+        'catalog' => 'Katalog',
+        'showcase' => 'Vitrin',
     ];
 
     /** @var array<string, Widget>|null */

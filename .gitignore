@@ -20,3 +20,12 @@ yarn-error.log
 /.vscode
 /.zed
 .DS_Store
+
+# İç notlar ve üretim tarifleri (repoya girmez)
+/dusunce.md
+/linkler.md
+/ornekpromt.md
+/tasarim
+/*.webp
+/database/data/rimpy/video-tarifi.md
+/database/data/rimpy/gorsel-stili.md

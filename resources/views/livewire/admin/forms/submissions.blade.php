@@ -88,7 +88,7 @@
                 <dl class="divide-y divide-ink-100">
                     @foreach ($open->data as $key => $value)
                         @php
-                            $label = collect($open->form?->fields ?? [])->firstWhere('key', $key)['label']['tr'] ?? $key;
+                            $label = $open->form?->fieldLabel($key) ?? $key;
                         @endphp
                         <div class="px-5 py-2.5">
                             <dt class="text-xs font-medium text-ink-500">{{ $label }}</dt>

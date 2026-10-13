@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hidrolik Birim Dönüştürücü</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/ortak.css">
+<style>
+.cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+.cats button{font:inherit;font-weight:600;font-size:.9rem;padding:7px 12px;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.cats button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.conv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:14px}
+.conv label input{font-family:var(--mono);font-size:1.15rem}
+.conv label.src input{border-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Hidrolik Birim Dönüştürücü</h1>
+    <p>Herhangi bir kutuya değer yazın; diğer birimler anında güncellenir. Tork, basınç, kuvvet, debi, uzunluk ve sıcaklık birimleri.</p>
+  </header>
+  <div class="cats" id="cats" role="group" aria-label="Birim grubu"></div>
+  <section class="panel" style="margin-top:14px">
+    <form novalidate><div class="conv" id="conv"></div></form>
+    <p class="note" id="cnote" style="margin-top:12px"></p>
+  </section>
+</div>
+<script src="assets/ayarlar.js"></script>
+<script src="assets/ortak.js"></script>
+<script>
+const CATS={
+  tork:{ad:'Tork',not:'Hidrolik tork anahtarı katalogları genellikle Nm ve ft·lb verir.',u:{'Nm':1,'kNm':1000,'ft·lb':1.35582,'in·lb':0.112985,'kgf·m':9.80665,'daNm':10}},
+  basinc:{ad:'Basınç',not:'Standart hidrolik el aletleri 700 bar (10.000 psi), cıvata germe aletleri 1.500 bar\'a kadar çalışır.',u:{'bar':1,'psi':0.0689476,'MPa':10,'kPa':0.01,'kgf/cm²':0.980665,'atm':1.01325}},
+  kuvvet:{ad:'Kuvvet / yük',not:'Silindir kapasitesi ton olarak verilir (1 t ≈ 9,81 kN). Kısa ton (US) 907 kg\'dır.',u:{'kN':1,'N':0.001,'ton (metrik)':9.80665,'ton (US kısa)':8.89644,'kgf':0.00980665,'lbf':0.00444822}},
+  debi:{ad:'Debi',not:'Pompa debisi genellikle yüksek basınç kademesinde L/dk olarak verilir.',u:{'L/dk':1,'cm³/dk':0.001,'gal/dk (US)':3.78541,'in³/dk':0.0163871,'L/sa':1/60}},
+  uzunluk:{ad:'Uzunluk',not:'Somun ağzı ve strok ölçüleri için.',u:{'mm':1,'cm':10,'m':1000,'inç':25.4,'ft':304.8}},
+  sicaklik:{ad:'Sıcaklık',not:'Hidrolik yağ çalışma sıcaklığı genellikle 60 °C\'yi geçmemelidir.',u:{'°C':'C','°F':'F','K':'K'}}
+};
+let cat='tork', vals={};
+const toC=(v,u)=>u==='C'?v:u==='F'?(v-32)*5/9:v-273.15, fromC=(c,u)=>u==='C'?c:u==='F'?c*9/5+32:c+273.15;
+const round=v=>{const a=Math.abs(v);return a===0?'0':a>=1000?v.toFixed(1):a>=1?(+v.toPrecision(6)).toString():(+v.toPrecision(4)).toString()};
+function tabs(){ $('cats').innerHTML=Object.entries(CATS).map(([k,c])=>`<button type="button" data-k="${k}" aria-pressed="${k===cat}">${c.ad}</button>`).join('');
+  $('cats').querySelectorAll('button').forEach(b=>b.onclick=()=>{cat=b.dataset.k;tabs();build();}); }
+function build(){ const c=CATS[cat]; const keys=Object.keys(c.u);
+  $('conv').innerHTML=keys.map((u,i)=>`<label for="u${i}" ${i===0?'class="src"':''}>${u}<input id="u${i}" inputmode="decimal" data-u="${u}"></label>`).join('');
+  $('cnote').textContent=c.not;
+  $('conv').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>update(inp)));
+  const first=$('u0'); first.value={tork:1000,basinc:700,kuvvet:100,debi:1,uzunluk:25.4,sicaklik:60}[cat]; update(first); }
+function update(src){ const c=CATS[cat], v=parseFloat(String(src.value).replace(',','.'));
+  $('conv').querySelectorAll('label').forEach(l=>l.classList.toggle('src',l.contains(src)));
+  if(isNaN(v)) return;
+  $('conv').querySelectorAll('input').forEach(inp=>{ if(inp===src) return; const u=inp.dataset.u;
+    let out = cat==='sicaklik' ? fromC(toC(v,c.u[src.dataset.u]),c.u[u]) : v*c.u[src.dataset.u]/c.u[u];
+    inp.value=round(out).replace('.',','); }); }
+document.querySelectorAll('form').forEach(f=>f.addEventListener('submit',e=>e.preventDefault()));
+tabs(); build();
+</script>
+
+</body>
+</html>

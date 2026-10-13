@@ -38,7 +38,12 @@ class WidgetRenderTest extends TestCase
             'icon_box', 'list', 'video', 'gallery', 'slider', 'accordion',
             'tabs', 'counter', 'testimonial', 'logo_strip', 'content_list',
             'form', 'map', 'html', 'menu', 'language_switcher', 'breadcrumb',
-            'template',
+            'template', 'quote_cart',
+            // Vitrin ve katalog
+            'hero_gauge', 'category_tiles', 'product_grid', 'steps', 'service_rail',
+            'stat_band', 'industry_tabs', 'trust_grid', 'cta_band',
+            'torque_calculator', 'cylinder_selector',
+            'unit_converter', 'flange_sequence', 'spec_writer', 'bolt_tensioner',
         ]);
     }
 

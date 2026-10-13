@@ -226,3 +226,210 @@ document.querySelectorAll('[data-form] form').forEach((form) => {
         }, 8000);
     });
 });
+
+// ── Teklif sepeti ───────────────────────────────────────────────────────────
+// Sunucu tarafı `QuoteCart`; burası yalnızca arayüz. İstekler arka planda
+// gider, sepet sayfa yenilenmeden güncellenir. Betik yüklenmezse aynı
+// formlar normal gönderilir ve her şey yine çalışır.
+(() => {
+    const root = document.querySelector('[data-quote]');
+    if (!root) return;
+
+    const panel = root.querySelector('.qc-panel');
+    const list = root.querySelector('[data-quote-lines]');
+    const empty = root.querySelector('[data-quote-empty]');
+    const toast = document.querySelector('[data-quote-toast]');
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    const text = root.dataset;
+    let lastFocus = null;
+    let toastTimer = null;
+
+    const request = async (url, body) => {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+            body,
+            credentials: 'same-origin',
+        });
+        if (!response.ok) throw response;
+        return response.json();
+    };
+
+    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    const render = (state) => {
+        document.querySelectorAll('[data-quote-count]').forEach((badge) => {
+            badge.textContent = state.count;
+            badge.classList.remove('is-bump');
+            void badge.offsetWidth;
+            badge.classList.add('is-bump');
+        });
+
+        list.innerHTML = state.lines.map((line) => `
+            <li class="qc-line" data-id="${line.id}">
+                <a class="qc-thumb" href="${esc(line.url)}">${line.image ? `<img src="${esc(line.image)}" alt="" loading="lazy">` : ''}</a>
+                <div class="qc-info">
+                    <a class="qc-name" href="${esc(line.url)}">${esc(line.title)}</a>
+                    ${line.code ? `<span class="qc-code">${esc(line.code)}</span>` : ''}
+                    <button type="button" class="qc-remove" data-quote-remove="${line.id}">${esc(text.textRemove)}</button>
+                </div>
+                <div class="qc-qty">
+                    <button type="button" data-quote-step="-1" aria-label="${esc(text.textLess)}">−</button>
+                    <span aria-live="polite">${line.quantity}</span>
+                    <button type="button" data-quote-step="1" aria-label="${esc(text.textMore)}">+</button>
+                </div>
+            </li>`).join('');
+
+        empty.hidden = state.lines.length > 0;
+
+        // Ürün kartlarındaki düğmeler sepette olduklarını göstersin.
+        const inCart = new Map(state.lines.map((line) => [String(line.id), line.quantity]));
+        document.querySelectorAll('[data-quote-item]').forEach((button) => {
+            const quantity = inCart.get(button.dataset.quoteItem);
+            button.classList.toggle('is-in', Boolean(quantity));
+            const label = button.querySelector('[data-quote-label]');
+            if (!label) return;
+            label.dataset.original ??= label.textContent;
+            label.textContent = quantity ? `${text.textInCart} · ${quantity}` : label.dataset.original;
+        });
+    };
+
+    const open = () => {
+        lastFocus = document.activeElement;
+        root.hidden = false;
+        requestAnimationFrame(() => root.classList.add('is-open'));
+        document.documentElement.classList.add('qc-lock');
+        hideToast();
+        setTimeout(() => panel.querySelector('input:not([type=hidden]), button')?.focus({ preventScroll: true }), 250);
+    };
+
+    const close = () => {
+        root.classList.remove('is-open');
+        document.documentElement.classList.remove('qc-lock');
+        setTimeout(() => { root.hidden = true; }, 350);
+        lastFocus?.focus?.({ preventScroll: true });
+    };
+
+    const showToast = (message) => {
+        if (!toast) return;
+        toast.querySelector('[data-quote-toast-text]').textContent = message;
+        toast.hidden = false;
+        requestAnimationFrame(() => toast.classList.add('is-on'));
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(hideToast, 3200);
+    };
+
+    function hideToast() {
+        if (!toast) return;
+        toast.classList.remove('is-on');
+        setTimeout(() => { toast.hidden = true; }, 300);
+    }
+
+    const update = (id, quantity) => {
+        const body = new FormData();
+        body.append('item', id);
+        body.append('quantity', quantity);
+        body.append('locale', text.locale);
+        return request(text.endpointUpdate, body).then(render);
+    };
+
+    document.addEventListener('click', (event) => {
+        // Kurucudaki sıradan bir buton da sepeti açabilsin: bağlantısı "#teklif" olması yeter.
+        if (event.target.closest('[data-quote-open], a[href="#teklif"]')) { event.preventDefault(); open(); return; }
+        if (event.target.closest('[data-quote-close]')) { close(); return; }
+
+        const remove = event.target.closest('[data-quote-remove]');
+        if (remove) {
+            const body = new FormData();
+            body.append('item', remove.dataset.quoteRemove);
+            body.append('locale', text.locale);
+            request(text.endpointRemove, body).then(render);
+            return;
+        }
+
+        const step = event.target.closest('[data-quote-step]');
+        if (step) {
+            const line = step.closest('.qc-line');
+            const current = Number(line.querySelector('.qc-qty span').textContent) || 1;
+            update(line.dataset.id, Math.max(0, current + Number(step.dataset.quoteStep)));
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (root.hidden) return;
+        if (event.key === 'Escape') close();
+
+        // Odak panelin içinde dolaşsın.
+        if (event.key === 'Tab') {
+            const focusable = [...panel.querySelectorAll('a[href], button:not([disabled]), input:not([type=hidden]), select, textarea')]
+                .filter((el) => el.offsetParent !== null);
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+    });
+
+    // Başka betikler (ör. sistem kurucu) sepeti bu olayla günceller:
+    // document.dispatchEvent(new CustomEvent('quote:update', { detail: { state, message } }))
+    document.addEventListener('quote:update', (event) => {
+        if (event.detail?.state) render(event.detail.state);
+        if (event.detail?.message) showToast(event.detail.message);
+    });
+
+    // Sepete ekleme
+    document.addEventListener('submit', (event) => {
+        const form = event.target.closest('[data-quote-add]');
+        if (!form) return;
+        event.preventDefault();
+
+        const button = form.querySelector('button');
+        button.disabled = true;
+
+        request(form.action, new FormData(form))
+            .then((state) => {
+                render(state);
+                const title = form.closest('[data-quote-title]')?.dataset.quoteTitle;
+                showToast(title ? `${title} ${text.textAdded}` : text.textAdded);
+            })
+            .catch(() => form.submit())
+            .finally(() => { button.disabled = false; });
+    });
+
+    // Teklif formu panelin içinden, sayfadan ayrılmadan gönderilir.
+    const quoteForm = root.querySelector('[data-quote-form] form');
+    quoteForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const button = quoteForm.querySelector('[type="submit"]');
+        quoteForm.querySelectorAll('.frm-error').forEach((el) => el.remove());
+
+        request(quoteForm.action, new FormData(quoteForm))
+            .then((result) => {
+                quoteForm.reset();
+                render({ count: 0, lines: [] });
+                const wrap = root.querySelector('[data-quote-form]');
+                wrap.querySelector('.frm-success')?.remove();
+                wrap.insertAdjacentHTML('beforeend', `<p class="frm-success" role="status">${esc(result.message || '')}</p>`);
+            })
+            .catch(async (response) => {
+                if (response?.status !== 422) { quoteForm.submit(); return; }
+                const { errors = {} } = await response.json();
+                Object.entries(errors).forEach(([name, messages]) => {
+                    const field = quoteForm.querySelector(`[name="${CSS.escape(name)}"]`)?.closest('.frm-field');
+                    field?.insertAdjacentHTML('beforeend', `<p class="frm-error" role="alert">${esc(messages[0])}</p>`);
+                });
+                quoteForm.querySelector('.frm-error')?.closest('.frm-field')?.querySelector('.frm-input')?.focus();
+            })
+            .finally(() => {
+                if (!button) return;
+                button.disabled = false;
+                if (button.dataset.originalText) button.textContent = button.dataset.originalText;
+            });
+    });
+
+    // Betiksiz gönderimden dönüldüyse ya da ?teklif adresiyle gelindiyse sepet açık başlasın.
+    if (new URLSearchParams(location.search).has('teklif') || root.querySelector('.frm-error, .frm-success')) open();
+})();
+

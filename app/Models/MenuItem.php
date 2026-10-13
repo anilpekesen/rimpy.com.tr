@@ -53,7 +53,9 @@ class MenuItem extends Model
 
         return match ($this->type) {
             'home' => $prefix ?: '/',
-            'url' => $this->url,
+            // "{locale}" dilin ön ekine dönüşür: "{locale}/#hizmetler" → "/en/#hizmetler".
+            // Aynı sayfa içi bağlantı her dilde kendi ana sayfasına gider.
+            'url' => str_replace('{locale}', $prefix, (string) $this->url) ?: null,
             'page' => ($page = Page::with('translations', 'parent.translations')->find($this->target_id))
                 ? $prefix.rtrim($page->path($locale), '/')
                 : null,

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Teknik Şartname Hazırlayıcı</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/ortak.css">
+<style>
+.spec{font-size:.93rem;line-height:1.6;display:grid;gap:12px}
+.spec h3{font-family:var(--display);font-size:1.15rem;margin:0}
+.spec ol{margin:0;padding-left:1.4rem;display:grid;gap:3px}
+.boxes{display:grid;gap:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Teknik Şartname Hazırlayıcı</h1>
+    <p>Satın alma veya ihale dosyanız için hidrolik ve tork ekipmanı teknik şartnamesi oluşturun. Ekipmanı ve gereksinimleri seçin; maddeler otomatik yazılır, kopyalanabilir ve PDF olarak indirilebilir.</p>
+  </header>
+  <div class="grid">
+    <section class="panel">
+      <form novalidate>
+        <label for="cat">Ekipman<select id="cat">
+          <option value="tw">Hidrolik tork anahtarı seti</option>
+          <option value="cyl">Hidrolik silindir seti</option>
+          <option value="bt">Hidrolik cıvata germe seti</option>
+          <option value="pump">Hidrolik pompa</option>
+        </select></label>
+        <div class="row">
+          <label for="cap" id="capl">Kapasite<input id="cap" type="number" step="any" value="10000"></label>
+          <label for="qty">Adet<input id="qty" type="number" min="1" value="2"></label>
+        </div>
+        <label for="ext" id="extl">Somun ağzı aralığı (mm)<input id="ext" value="46–105"></label>
+        <label for="drv">Tahrik / enerji<select id="drv"><option value="el">Elektrik 230 V</option><option value="el3">Elektrik 400 V</option><option value="air">Basınçlı hava</option><option value="hand">El</option></select></label>
+        <div class="boxes">
+          <label class="check"><input id="atex" type="checkbox"> <span>Patlayıcı ortam (ATEX) uygunluğu</span></label>
+          <label class="check"><input id="cal" type="checkbox" checked> <span>Akredite laboratuvar kalibrasyon sertifikası</span></label>
+          <label class="check"><input id="train" type="checkbox" checked> <span>Kullanıcı eğitimi</span></label>
+          <label class="check"><input id="case" type="checkbox" checked> <span>Taşıma çantası / sandık</span></label>
+        </div>
+        <div class="row">
+          <label for="war">Garanti (ay)<input id="war" type="number" min="6" step="6" value="24"></label>
+          <label for="del">Teslim (gün)<input id="del" type="number" min="1" value="45"></label>
+        </div>
+        <div id="contactSlot"></div>
+      </form>
+    </section>
+    <section class="panel out">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center">
+        <h2 id="title"></h2>
+        <button type="button" class="btn" id="copy">Metni kopyala</button>
+      </div>
+      <div class="spec" id="spec"></div>
+      <p class="note">Maddeler genel saha uygulamasına ve yürürlükteki mevzuat atıflarına göre hazırlanır. İhale dosyasına koymadan önce kurumunuzun gereksinimleriyle karşılaştırın; rekabeti gereksiz kısıtlayan marka veya model atfı içermez.</p>
+    </section>
+  </div>
+</div>
+<script src="assets/ayarlar.js"></script>
+<script src="assets/ortak.js"></script>
+<script>
+const CAP={tw:['Maks. tork (Nm)','Somun ağzı aralığı (mm)','46–105'],cyl:['Kapasite (ton)','Strok (mm)','150'],bt:['Maks. germe yükü (kN)','Cıvata çap aralığı','M30–M45'],pump:['Debi, 700 bar (L/dk)','Depo (L)','10']};
+const DEF={tw:10000,cyl:50,bt:1000,pump:1.0};
+let SECS=[];
+function onCat(){const c=$('cat').value;$('capl').firstChild.textContent=CAP[c][0];$('extl').firstChild.textContent=CAP[c][1];$('cap').value=DEF[c];$('ext').value=CAP[c][2];
+  $('drv').value=c==='cyl'?'hand':'el'; calc();}
+function calc(){
+  const c=$('cat').value, cap=$('cap').value, q=$('qty').value, ext=$('ext').value, drv=$('drv').value, atex=$('atex').checked;
+  const drvTxt={el:'230 V monofaze elektrik motorlu',el3:'400 V trifaze elektrik motorlu',air:'basınçlı hava (6–7 bar) tahrikli',hand:'el ile çalıştırılan'}[drv];
+  const S=[];
+  if(c==='tw'){
+    S.push(['Genel',[`${q} (${q}) takım hidrolik tork anahtarı seti; her takım anahtar, pompa, hortum ve manometreden oluşacaktır.`,`Anahtar en az ${fmt(+cap)} Nm tork üretebilmeli ve ${ext} mm somun ağzı aralığında kullanılabilmelidir (değiştirilebilir altıgen kaset veya lokma ile).`,`Tork doğruluğu ±%3 veya daha iyi olmalı; basınç–tork dönüşüm tablosu teslimatla birlikte verilmelidir.`,`Anahtar 360° dönebilen hortum bağlantısına ve 360° ayarlanabilir reaksiyon kolu veya kaset tipi reaksiyon ayağına sahip olmalıdır.`,`Gövde yüksek dayanımlı alüminyum veya çelik alaşımdan, korozyona karşı kaplanmış olmalıdır.`]]);
+    S.push(['Pompa ve bağlantılar',[`Pompa ${drvTxt}, iki kademeli, 700 bar maks. çalışma basınçlı olmalıdır.`,`Pompada 4/3 yön valfi, ayarlanabilir emniyet valfi ve en az 5 m kablolu uzaktan kumanda bulunmalıdır.`,`Manometre gliserinli, 0–1000 bar skalalı, tercihen tork skalası işaretli olmalıdır.`,`Her anahtar için en az 5 m uzunluğunda, 700 bar çalışma basınçlı ikiz hortum, patlama emniyet katsayısı en az 4:1, hızlı kaplinli olarak verilmelidir.`]]);
+  } else if(c==='cyl'){
+    S.push(['Genel',[`${q} (${q}) adet ${cap} ton kapasiteli, en az ${ext} mm stroklu hidrolik silindir.`,`Maks. çalışma basıncı 700 bar olmalı; silindir üzerinde kapasite, strok ve maks. basınç kalıcı olarak işaretlenmelidir.`,`Silindirde eğik başlık (tilt saddle), tercihen kilit somunlu mekanik emniyet bulunmalıdır.`,`Silindir aşırı strok durdurucusuna sahip olmalı; piston yüzeyi sert krom kaplı olmalıdır.`,`Tek etkili silindirlerde yay geri dönüşü, çift etkili silindirlerde hidrolik dönüş olmalıdır.`]]);
+    S.push(['Pompa ve bağlantılar',[`Pompa ${drvTxt} olmalı; depo hacmi tüm silindirlerin tam stroku için gereken yağın en az 1,3 katı olmalıdır.`,`${q>2?`${q} silindiri aynı anda besleyecek dağıtım manifoldu ve her hatta ayrı vana verilmelidir.`:'Her silindir için ayrı hortum ve hızlı kaplin verilmelidir.'}`,`Hortumlar 700 bar çalışma basınçlı, patlama emniyet katsayısı en az 4:1 olmalıdır.`,`Sisteme 0–1000 bar gliserinli manometre ve manometre adaptörü dahil edilmelidir.`]]);
+  } else if(c==='bt'){
+    S.push(['Genel',[`${q} (${q}) adet hidrolik cıvata germe aleti; ${ext} cıvata aralığı için uygun köprü ve çekme somunlarıyla.`,`Alet en az ${cap} kN germe yükü üretebilmeli, maks. çalışma basıncı 1500 bar olmalıdır.`,`Aşırı strok göstergesi veya mekanik strok sınırlayıcı bulunmalıdır.`,`Çekme somunları ilgili cıvata dişine uygun, değiştirilebilir olmalıdır.`]]);
+    S.push(['Pompa ve bağlantılar',[`1500 bar germe pompası, ${drvTxt}, ayarlanabilir basınç sınırlayıcılı olmalıdır.`,`Germe aletlerini zincirleme bağlamaya uygun, 1500 bar çalışma basınçlı hortum seti verilmelidir.`,`0–1600 bar gliserinli manometre dahil edilmelidir.`]]);
+  } else {
+    S.push(['Genel',[`${q} (${q}) adet ${drvTxt} hidrolik pompa.`,`Pompa 700 bar maks. çalışma basıncında en az ${cap} L/dk debi sağlamalıdır; iki kademeli (düşük basınçta yüksek debi) olmalıdır.`,`Kullanılabilir depo hacmi en az ${ext} L olmalıdır.`,`Ayarlanabilir emniyet valfi, manometre bağlantı portu ve yağ seviye göstergesi bulunmalıdır.`,`Pompa taşıma kolu veya tekerlekli şasi ile kolay taşınabilir olmalıdır.`]]);
+  }
+  const doc=[`Ürünler Makine Emniyeti Yönetmeliği (2006/42/AT) kapsamında CE işaretli olmalı; AB uygunluk beyanı teslimatla verilmelidir.`,`Hidrolik devre ISO 4413 güvenlik gerekliliklerine uygun tasarlanmış olmalıdır.`,`Türkçe kullanım ve bakım kılavuzu, yedek parça listesi ve patlatılmış resim verilmelidir.`];
+  if(atex) doc.push('Pompa ve tahrik ünitesi ATEX 2014/34/AB yönetmeliğine uygun olmalı, ilgili ATEX sertifikası sunulmalıdır.');
+  if($('cal').checked) doc.push(`${c==='tw'?'Tork anahtarı ve manometre':c==='bt'?'Germe aleti ve manometre':'Manometre'} için ISO/IEC 17025 akrediteli laboratuvardan alınmış kalibrasyon sertifikası verilmelidir.`);
+  S.push(['Belgeler ve uygunluk',doc]);
+  const srv=[`Garanti süresi teslimden itibaren en az ${$('war').value} ay olmalıdır.`,`Yüklenici, ürünlerin yedek parça ve servis hizmetini en az 10 yıl süreyle Türkiye'den sağlayacağını taahhüt etmelidir.`,`Teslim süresi sipariş tarihinden itibaren en fazla ${$('del').value} takvim günüdür.`];
+  if($('train').checked) srv.push('Teslimatta en az 4 saatlik uygulamalı kullanıcı ve güvenlik eğitimi verilmeli, katılım belgesi düzenlenmelidir.');
+  if($('case').checked) srv.push('Her set darbeye dayanıklı taşıma çantası veya ahşap/metal sandık içinde teslim edilmelidir.');
+  S.push(['Garanti, servis ve teslimat',srv]);
+  SECS=S;
+  $('title').textContent={tw:'Hidrolik Tork Anahtarı Seti',cyl:'Hidrolik Silindir Seti',bt:'Hidrolik Cıvata Germe Seti',pump:'Hidrolik Pompa'}[c]+' — Teknik Şartname';
+  let n=0; $('spec').innerHTML=S.map(([h,arr],i)=>`<div><h3>${i+1}. ${h}</h3><ol start="1">${arr.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`).join('');
+}
+function plain(){return $('title').textContent+'\n\n'+SECS.map(([h,a],i)=>`${i+1}. ${h}\n`+a.map((x,j)=>`${i+1}.${j+1}. ${x}`).join('\n')).join('\n\n');}
+$('copy').onclick=async()=>{const t=plain();try{await navigator.clipboard.writeText(t);$('copy').textContent='Kopyalandı';}catch(e){const r=document.createRange();r.selectNodeContents($('spec'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('copy').textContent='Metni seçtim, Ctrl+C ile kopyalayın';}setTimeout(()=>$('copy').textContent='Metni kopyala',2500);};
+$('cat').addEventListener('change',onCat);
+live(['cap','qty','ext','drv','atex','cal','train','case','war','del'],calc);
+wireContact(()=>({title:$('title').textContent,prefix:'SRT',data:{ekipman:$('cat').selectedOptions[0].text,adet:+$('qty').value,metin:plain()},
+  html:SECS.map(([h,a],i)=>`<h2>${i+1}. ${esc(h)}</h2>`+a.map((x,j)=>`<p style="margin:1mm 0">${i+1}.${j+1}. ${esc(x)}</p>`).join('')).join('')}));
+</script>
+
+</body>
+</html>

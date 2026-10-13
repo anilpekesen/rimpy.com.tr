@@ -12,9 +12,7 @@
 
         <table style="width:100%;border-collapse:collapse">
             @foreach ($data as $key => $value)
-                @php
-                    $label = collect($form->fields)->firstWhere('key', $key)['label']['tr'] ?? $key;
-                @endphp
+                @php $label = $form->fieldLabel($key); @endphp
                 @continue (in_array($key, ['locale', 'page_url'], true))
                 <tr>
                     <td style="padding:10px 24px;font-size:13px;color:#6b7280;vertical-align:top;width:35%;border-bottom:1px solid #f1f5f9">
