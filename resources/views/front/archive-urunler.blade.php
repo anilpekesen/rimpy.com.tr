@@ -14,7 +14,7 @@
         ->where('taxonomy_id', $taxonomy->id)->where('is_active', true)
         ->where('parent_id', $parentId)->orderBy('sort')->get() : collect();
     $parentTerm = $parentId ? Term::withTranslations()->with('taxonomy')->find($parentId) : null;
-    $termUrl = fn ($t) => $base.'/'.$t->taxonomy->prefix($locale).'/'.$t->t('slug', $locale);
+    $termUrl = fn ($t) => $prefix.$t->path($locale);
 @endphp
 
 <x-site-layout

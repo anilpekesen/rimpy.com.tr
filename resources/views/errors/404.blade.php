@@ -60,7 +60,7 @@
     <section class="e404-ways">
         <div class="e404-ways-inner">
             @foreach ($categories as $category)
-                <a class="e404-way" href="{{ $prefix.'/'.$type->prefix($locale).'/'.$category->taxonomy->prefix($locale).'/'.$category->t('slug', $locale) }}">
+                <a class="e404-way" href="{{ $prefix.$category->path($locale) }}">
                     <span>{{ $tr ? 'Kategori' : 'Category' }}</span>
                     <b>{{ $category->t('name', $locale) }}</b>
                     <x-icon name="arrow-right" />

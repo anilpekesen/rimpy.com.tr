@@ -27,7 +27,7 @@ class CategoryTilesWidget extends Widget
     {
         return [
             'content' => ['label' => 'İçerik', 'controls' => $this->headControls(
-                '01 — Ürün grupları', "Üç disiplin.\nTek tedarikçi.",
+                '01 — Ürün grupları', "Her cıvata işi.\nTek tedarikçi.",
                 'Tork aletlerinden 700 bar hidrolik sistemlere, saha ekibinizin ihtiyaç duyduğu her şey tek teklifte.'
             ) + [
                 'content_type' => Controls::text('İçerik türü anahtarı', ['default' => 'urunler']),

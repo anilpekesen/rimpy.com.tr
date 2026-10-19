@@ -17,6 +17,32 @@ document.querySelectorAll('[data-pd-gallery]').forEach((gallery) => {
     });
 });
 
+// ── Ürün sekmeleri ──────────────────────────────────────────────────────────
+// Betik yoksa bölümler alt alta durur; varsa yalnızca seçili sekme görünür.
+document.querySelectorAll('[data-pd-tabs]').forEach((root) => {
+    const tabs = [...root.querySelectorAll('[role="tab"]')];
+    const select = (tab, focus = false) => {
+        tabs.forEach((t) => {
+            const on = t === tab;
+            t.classList.toggle('is-active', on);
+            t.setAttribute('aria-selected', String(on));
+            t.tabIndex = on ? 0 : -1;
+            document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+        });
+        if (focus) tab.focus();
+    };
+
+    root.classList.add('is-ready');
+    select(tabs[0]);
+    tabs.forEach((tab, i) => {
+        tab.addEventListener('click', () => select(tab));
+        tab.addEventListener('keydown', (event) => {
+            const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+            if (step) select(tabs[(i + step + tabs.length) % tabs.length], true);
+        });
+    });
+});
+
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ── Açılış: tork göstergesi ─────────────────────────────────────────────────

@@ -23,7 +23,7 @@
                 @php $href = $item->href($context->locale); @endphp
                 @continue (! $href)
 
-                <li class="nav-item-el @if ($item->activeChildren->isNotEmpty()) nav-item-el--has-sub @endif">
+                <li class="nav-item-el @if ($item->activeChildren->isNotEmpty()) nav-item-el--has-sub @endif @if ($item->is_mega && $item->activeChildren->isNotEmpty()) nav-item-el--mega @endif">
                     <a class="nav-link @if (rtrim($href, '/') === rtrim($current, '/')) is-active @endif"
                        href="{{ $href }}" target="{{ $item->target }}"
                        @if ($item->target === '_blank') rel="noopener" @endif
@@ -34,7 +34,38 @@
                         @endif
                     </a>
 
-                    @if ($item->activeChildren->isNotEmpty())
+                    @if ($item->is_mega && $item->activeChildren->isNotEmpty())
+                        {{-- Mega menü: her alt öğe görselli bir sütun, torunları
+                             sütunun listesi. Görsel bağlı kategorinin görselidir. --}}
+                        <div class="nav-sub nav-mega">
+                            <div class="nav-mega-grid">
+                                @foreach ($item->activeChildren as $column)
+                                    @php
+                                        $columnHref = $column->href($context->locale);
+                                        $image = $column->image();
+                                    @endphp
+                                    @continue (! $columnHref)
+                                    <div class="nav-mega-col">
+                                        <a class="nav-mega-media" href="{{ $columnHref }}" tabindex="-1" aria-hidden="true">
+                                            @if ($image)
+                                                <img src="{{ $image->url('small') }}" alt="" loading="lazy" decoding="async">
+                                            @endif
+                                        </a>
+                                        <a class="nav-link nav-mega-title" href="{{ $columnHref }}">{{ $column->title($context->locale) }}</a>
+                                        @if ($column->activeChildren->isNotEmpty())
+                                            <ul class="nav-mega-list">
+                                                @foreach ($column->activeChildren as $leaf)
+                                                    @php $leafHref = $leaf->href($context->locale); @endphp
+                                                    @continue (! $leafHref)
+                                                    <li><a class="nav-link" href="{{ $leafHref }}">{{ $leaf->title($context->locale) }}</a></li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @elseif ($item->activeChildren->isNotEmpty())
                         <ul class="nav-sub">
                             @foreach ($item->activeChildren as $child)
                                 @php $childHref = $child->href($context->locale); @endphp

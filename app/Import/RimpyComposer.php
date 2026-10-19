@@ -66,16 +66,25 @@ class RimpyComposer
             $this->scenes[$key] = $this->upload($path, 'rimpy-'.basename($path), $folder)?->id;
         }
 
-        // Ana kategorilere kart görseli
-        $map = ['tork-aletleri' => 'kategori-tork', 'yuksek-basinc-hidrolik' => 'kategori-hidrolik', 'endustriyel-ekipman' => 'kategori-endustriyel'];
+        // Ana kategorilere kart ve mega menü görseli: sahne varsa sahne,
+        // yoksa o gruptaki bir ürünün fotoğrafı.
+        $map = [
+            'tork-ekipmanlari' => ['kategori-tork', 'RHT-08'],
+            'hidrolik-ekipmanlar' => ['kategori-hidrolik', 'RPE-554'],
+            'flans-bakim-ekipmanlari' => [null, 'RFS-14'],
+            'test-ve-kalibrasyon' => [null, 'RGA-63'],
+            'endustriyel-ekipmanlar' => ['kategori-endustriyel', 'RPL-303'],
+        ];
 
-        foreach ($map as $slug => $scene) {
-            if (! isset($this->scenes[$scene])) {
+        foreach ($map as $slug => [$scene, $code]) {
+            $image = ($scene ? ($this->scenes[$scene] ?? null) : null) ?? $this->productImage($code);
+
+            if (! $image) {
                 continue;
             }
 
             Term::whereHas('translations', fn ($q) => $q->where('locale', 'tr')->where('slug', $slug))
-                ->update(['image_id' => $this->scenes[$scene]]);
+                ->update(['image_id' => $image]);
         }
 
         return $this->scenes;
@@ -83,38 +92,68 @@ class RimpyComposer
 
     // ── Menüler ──────────────────────────────────────────────────────────
 
-    public function menus(): void
+    /**
+     * Üst menü: Anasayfa · Kurumsal · Ürünler (görselli mega menü) ·
+     * Markalar · Teknik & Blog · Hizmetlerimiz · İletişim.
+     *
+     * @param  array<string, Page>  $pages  RimpyPages::all()
+     */
+    public function menus(array $pages): void
     {
         $type = ContentType::where('key', 'urunler')->first();
+        $blog = ContentType::where('key', 'blog')->where('is_active', true)->first();
         $taxonomy = Taxonomy::where('content_type_id', $type->id)->where('key', 'kategori')->first();
-        $roots = Term::withTranslations()->with('children.translations')
-            ->where('taxonomy_id', $taxonomy->id)->whereNull('parent_id')->orderBy('sort')->get();
+        $roots = Term::withTranslations()->with(['children' => fn ($q) => $q->where('is_active', true)->with('translations')])
+            ->where('taxonomy_id', $taxonomy->id)->whereNull('parent_id')->where('is_active', true)->orderBy('sort')->get();
+        $name = fn (Term $term) => $term->translations->pluck('name', 'locale')->all();
+        $title = fn (Page $page) => $page->translations->pluck('title', 'locale')->all();
 
         $header = $this->resetMenu('header', 'Üst menü');
 
-        foreach ($roots as $i => $root) {
-            $parent = $this->item($header, 'term', $root->id, $root->translations->pluck('name', 'locale')->all(), $i);
+        $this->item($header, 'home', null, ['tr' => 'Anasayfa', 'en' => 'Home'], 0);
+        $this->item($header, 'page', $pages['kurumsal']->id, $title($pages['kurumsal']), 1);
 
-            foreach ($root->children->sortBy('sort')->values() as $j => $child) {
-                $this->item($header, 'term', $child->id, $child->translations->pluck('name', 'locale')->all(), $j, $parent->id);
+        // Ürünler: ana kategoriler sütun, alt kategoriler sütunun listesi.
+        $products = $this->item($header, 'archive', $type->id, ['tr' => 'Ürünler', 'en' => 'Products'], 2, mega: true);
+
+        foreach ($roots as $i => $root) {
+            $column = $this->item($header, 'term', $root->id, $name($root), $i, $products->id);
+
+            foreach ($root->children->values() as $j => $child) {
+                $this->item($header, 'term', $child->id, $name($child), $j, $column->id);
             }
         }
 
-        $this->item($header, 'url', null, ['tr' => 'Hizmetler', 'en' => 'Services'], 10, url: '{locale}/#hizmetler');
-        $this->item($header, 'url', null, ['tr' => 'Sektörler', 'en' => 'Industries'], 11, url: '{locale}/#sektorler');
-        $this->item($header, 'url', null, ['tr' => 'İletişim', 'en' => 'Contact'], 12, url: '{locale}/?teklif=1');
+        $this->item($header, 'page', $pages['markalar']->id, $title($pages['markalar']), 3);
 
-        $products = $this->resetMenu('footer-urunler', 'Alt menü: ürünler');
-        $this->item($products, 'archive', $type->id, ['tr' => 'Tüm ürünler', 'en' => 'All products'], 0);
+        // Mühendislik araçları toolPages() içinde bu başlığın altına eklenir.
+        $blog
+            ? $this->item($header, 'archive', $blog->id, ['tr' => 'Teknik & Blog', 'en' => 'Technical & Blog'], 4)
+            : $this->item($header, 'url', null, ['tr' => 'Teknik & Blog', 'en' => 'Technical & Blog'], 4, url: '#');
+
+        $services = $this->item($header, 'page', $pages['hizmetler']->id, $title($pages['hizmetler']), 5);
+        $sort = 0;
+
+        foreach ($pages as $key => $page) {
+            if (str_starts_with($key, 'hizmet:')) {
+                $this->item($header, 'page', $page->id, $title($page), $sort++, $services->id);
+            }
+        }
+
+        $this->item($header, 'page', $pages['iletisim']->id, $title($pages['iletisim']), 6);
+
+        $footerProducts = $this->resetMenu('footer-urunler', 'Alt menü: ürünler');
+        $this->item($footerProducts, 'archive', $type->id, ['tr' => 'Tüm ürünler', 'en' => 'All products'], 0);
 
         foreach ($roots as $i => $root) {
-            $this->item($products, 'term', $root->id, $root->translations->pluck('name', 'locale')->all(), $i + 1);
+            $this->item($footerProducts, 'term', $root->id, $name($root), $i + 1);
         }
 
         $company = $this->resetMenu('footer-kurumsal', 'Alt menü: kurumsal');
-        $this->item($company, 'url', null, ['tr' => 'Hizmetler', 'en' => 'Services'], 0, url: '{locale}/#hizmetler');
-        $this->item($company, 'url', null, ['tr' => 'Sektörler', 'en' => 'Industries'], 1, url: '{locale}/#sektorler');
-        $this->item($company, 'url', null, ['tr' => 'Teklif iste', 'en' => 'Request a quote'], 2, url: '{locale}/?teklif=1');
+        $this->item($company, 'page', $pages['kurumsal']->id, $title($pages['kurumsal']), 0);
+        $this->item($company, 'page', $pages['hizmetler']->id, $title($pages['hizmetler']), 1);
+        $this->item($company, 'page', $pages['markalar']->id, $title($pages['markalar']), 2);
+        $this->item($company, 'page', $pages['iletisim']->id, $title($pages['iletisim']), 5);
     }
 
     // ── Şablonlar ────────────────────────────────────────────────────────
@@ -126,28 +165,12 @@ class RimpyComposer
         $tree = [
             Blocks::section([
                 'width' => 'full-content',
-                '_padding' => Blocks::padY(9, 9),
+                '_padding' => Blocks::padY(8, 8),
                 'align_items' => 'center',
                 '_css_class' => 'topbar',
                 '_hide' => ['m' => true],
             ], [
-                Blocks::column(50, [
-                    Blocks::widget('text', [
-                        'body' => [
-                            'tr' => '<p><span class="dot"></span>'.e('Teklifler 24 saat içinde yanıtlanır · Stoktan teslim · Türkiye\'de servis').'</p>',
-                            'en' => '<p><span class="dot"></span>Quotes answered within 24 hours · Delivery from stock · Service in Türkiye</p>',
-                        ],
-                    ]),
-                ]),
-                Blocks::column(50, [
-                    Blocks::widget('language_switcher', [
-                        '_css_class' => 'topbar-lang',
-                        'display' => 'code',
-                        'style' => 'inline',
-                        'color' => '#A9ADB4',
-                        'active_color' => '#FFFFFF',
-                    ]),
-                ]),
+                Blocks::column(100, [Blocks::widget('topbar')]),
             ]),
             Blocks::section([
                 'width' => 'boxed',
@@ -156,7 +179,7 @@ class RimpyComposer
                 'gap' => Blocks::size(24),
                 '_css_class' => 'masthead',
             ], [
-                Blocks::column(15, [
+                Blocks::column(14, [
                     Blocks::widget('image', [
                         'image' => $logo,
                         'size' => 'medium',
@@ -165,7 +188,7 @@ class RimpyComposer
                         'link' => ['type' => 'url', 'url' => '/'],
                     ]),
                 ], [], ['t' => 30, 'm' => 45]),
-                Blocks::column(65, [
+                Blocks::column(70, [
                     Blocks::widget('menu', [
                         'menu_key' => 'header',
                         'orientation' => 'horizontal',
@@ -176,12 +199,12 @@ class RimpyComposer
                         'hover_color' => '@accent',
                         'active_color' => '@accent',
                         'indicator' => '',
-                        'gap' => Blocks::size(22),
+                        'gap' => Blocks::size(20),
                         'submenu_bg' => '#ffffff',
                         'typography' => Blocks::type(['family' => 'heading', 'size' => 15, 'weight' => 600]),
                     ]),
                 ], [], ['t' => 40, 'm' => 25]),
-                Blocks::column(20, [
+                Blocks::column(16, [
                     Blocks::widget('quote_cart', [
                         'text' => ['tr' => 'Teklif sepeti', 'en' => 'Quote'],
                         'align' => Blocks::responsive('right'),
@@ -196,6 +219,7 @@ class RimpyComposer
     public function footer(): Template
     {
         $logo = Setting::get('general.logo_light_id');
+        $contact = Setting::get('contact', []) ?: [];
         $menu = fn (string $key) => Blocks::widget('menu', [
             'menu_key' => $key,
             'orientation' => 'vertical',
@@ -269,10 +293,11 @@ class RimpyComposer
                 Blocks::column(22, [
                     $heading(['tr' => 'İletişim', 'en' => 'Contact']),
                     Blocks::widget('list', [
-                        'items' => [
-                            ['text' => 'info@rimpy.com.tr', 'icon' => 'mail', 'link' => ['type' => 'email', 'email' => 'info@rimpy.com.tr']],
-                            ['text' => 'Istanbul, Türkiye', 'icon' => 'map-pin'],
-                        ],
+                        'items' => array_values(array_filter([
+                            filled($contact['phone'] ?? null) ? ['text' => $contact['phone'], 'icon' => 'phone', 'link' => ['type' => 'phone', 'phone' => $contact['phone']]] : null,
+                            ['text' => $contact['email'] ?? 'info@rimpy.com.tr', 'icon' => 'mail', 'link' => ['type' => 'email', 'email' => $contact['email'] ?? 'info@rimpy.com.tr']],
+                            filled($contact['address']['tr'] ?? null) ? ['text' => $contact['address']['tr'], 'icon' => 'map-pin'] : null,
+                        ])),
                         'icon_color' => '@primary',
                         'text_color' => '#cfd2d6',
                         'gap' => Blocks::size(12),
@@ -475,7 +500,8 @@ class RimpyComposer
         }
 
         $header = Menu::where('key', 'header')->first();
-        $parent = $this->item($header, 'page', $result['tork']->id, ['tr' => 'Mühendislik', 'en' => 'Engineering'], 9);
+        $parent = MenuItem::where('menu_id', $header->id)->whereNull('parent_id')->where('sort', 4)->first()
+            ?? $this->item($header, 'page', $result['tork']->id, ['tr' => 'Mühendislik', 'en' => 'Engineering'], 9);
         $this->item($header, 'page', $result['tork']->id, ['tr' => 'Tork hesaplayıcı', 'en' => 'Torque calculator'], 0, $parent->id);
         $this->item($header, 'page', $result['silindir']->id, ['tr' => 'Silindir seçici ve sistem kurucu', 'en' => 'Cylinder selector and system builder'], 1, $parent->id);
         $this->item($header, 'page', $result['germe']->id, ['tr' => 'Cıvata germe hesabı', 'en' => 'Bolt tensioning calculator'], 2, $parent->id);
@@ -550,9 +576,10 @@ class RimpyComposer
         return $menu;
     }
 
-    private function item(Menu $menu, string $type, ?int $targetId, array $label, int $sort, ?int $parentId = null, ?string $url = null): MenuItem
+    private function item(Menu $menu, string $type, ?int $targetId, array $label, int $sort, ?int $parentId = null, ?string $url = null, bool $mega = false): MenuItem
     {
         return MenuItem::create([
+            'is_mega' => $mega,
             'menu_id' => $menu->id,
             'parent_id' => $parentId,
             'type' => $type,

@@ -41,6 +41,14 @@ class MenuItem extends Model
         return $this->label[$locale] ?? $this->label[Locales::default()] ?? '';
     }
 
+    /** Kategoriye bağlı öğenin görseli (mega menü sütunları için). */
+    public function image(): ?Media
+    {
+        return $this->type === 'term'
+            ? Term::with('image')->find($this->target_id)?->image
+            : null;
+    }
+
     /**
      * Öğenin gerçek adresi. Bağlı olduğu sayfa/içerik silinmiş ya da yayından
      * kaldırılmışsa null döner ve menüde hiç gösterilmez — müşteri menüde
@@ -63,7 +71,7 @@ class MenuItem extends Model
                 ? $prefix.$item->path($locale)
                 : null,
             'term' => ($term = Term::with('translations', 'taxonomy.contentType')->find($this->target_id))
-                ? $prefix.'/'.$term->taxonomy->contentType->prefix($locale).'/'.$term->taxonomy->prefix($locale).'/'.$term->t('slug', $locale)
+                ? $prefix.$term->path($locale)
                 : null,
             'archive' => ($type = ContentType::find($this->target_id))
                 ? $prefix.'/'.$type->prefix($locale)

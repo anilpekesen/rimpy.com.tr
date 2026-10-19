@@ -1,88 +1,125 @@
 {
   "kategoriler": [
     {
-      "slug": "tork-aletleri",
-      "ad": "Tork Aletleri",
-      "en": "Torque Tools",
+      "slug": "tork-ekipmanlari",
+      "ad": "Tork Ekipmanları",
+      "en": "Torque Equipment",
       "alt": [
+        {
+          "slug": "manuel-tork-ekipmanlari",
+          "ad": "Manuel Tork Ekipmanları",
+          "en": "Manual Torque Tools"
+        },
+        {
+          "slug": "elektrikli-tork-anahtarlari",
+          "ad": "Elektrikli Tork Anahtarları",
+          "en": "Electric Torque Wrenches"
+        },
+        {
+          "slug": "akulu-tork-anahtarlari",
+          "ad": "Akülü Tork Anahtarları",
+          "en": "Battery Torque Wrenches"
+        },
+        {
+          "slug": "havali-tork-anahtarlari",
+          "ad": "Havalı Tork Anahtarları",
+          "en": "Pneumatic Torque Wrenches"
+        },
         {
           "slug": "hidrolik-tork-anahtarlari",
           "ad": "Hidrolik Tork Anahtarları",
           "en": "Hydraulic Torque Wrenches"
         },
         {
-          "slug": "elektrikli-tork-anahtarlari",
-          "ad": "Elektrikli ve Akülü Tork Anahtarları",
-          "en": "Electric & Battery Torque Wrenches"
+          "slug": "saplama-gerdirmeler",
+          "ad": "Saplama Gerdirmeler",
+          "en": "Stud Tensioners"
         },
         {
-          "slug": "tork-carpanlari",
-          "ad": "Tork Çarpanları",
-          "en": "Torque Multipliers"
+          "slug": "mekanik-tork-artiricilar",
+          "ad": "Mekanik Tork Artırıcılar",
+          "en": "Mechanical Torque Multipliers"
         },
         {
-          "slug": "civata-gerdirme",
-          "ad": "Cıvata Gerdirme",
-          "en": "Bolt Tensioners"
-        },
-        {
-          "slug": "darbe-lokmalari",
-          "ad": "Ağır Hizmet Darbe Lokmaları",
-          "en": "Heavy Duty Impact Sockets"
+          "slug": "havali-agir-lokmalar-ve-daraltici-burclar",
+          "ad": "Havalı Ağır Lokmalar & Daraltıcı Burçlar",
+          "en": "Heavy Duty Impact Sockets & Reducers"
         }
       ]
     },
     {
-      "slug": "yuksek-basinc-hidrolik",
-      "ad": "Yüksek Basınç Hidrolik",
-      "en": "High Pressure Hydraulics",
+      "slug": "hidrolik-ekipmanlar",
+      "ad": "Hidrolik Ekipmanlar",
+      "en": "Hydraulic Equipment",
       "alt": [
-        {
-          "slug": "hidrolik-silindirler",
-          "ad": "Hidrolik Silindirler",
-          "en": "Hydraulic Cylinders"
-        },
-        {
-          "slug": "hidrolik-pompalar",
-          "ad": "Hidrolik Pompalar",
-          "en": "Hydraulic Pumps"
-        },
-        {
-          "slug": "hortum-ve-baglanti",
-          "ad": "Hortum ve Bağlantı Elemanları",
-          "en": "Hoses & Couplers"
-        },
         {
           "slug": "hidrolik-krikolar",
           "ad": "Hidrolik Krikolar",
-          "en": "Hydraulic Jacks"
+          "en": "Hydraulic Jacks & Cylinders"
+        },
+        {
+          "slug": "hidrolik-el-pompalari",
+          "ad": "Hidrolik El Pompaları",
+          "en": "Hydraulic Hand Pumps"
+        },
+        {
+          "slug": "hidrolik-guc-uniteleri",
+          "ad": "Hidrolik Güç Üniteleri",
+          "en": "Hydraulic Power Units"
+        },
+        {
+          "slug": "hidrolik-aksesuarlar",
+          "ad": "Hidrolik Aksesuarlar",
+          "en": "Hydraulic Accessories"
         }
       ]
     },
     {
-      "slug": "endustriyel-ekipman",
-      "ad": "Endüstriyel Ekipman",
+      "slug": "flans-bakim-ekipmanlari",
+      "ad": "Flanş Bakım Ekipmanları",
+      "en": "Flange Maintenance Tools",
+      "alt": [
+        {
+          "slug": "flans-ayiricilar",
+          "ad": "Flanş Ayırıcılar",
+          "en": "Flange Spreaders"
+        },
+        {
+          "slug": "flans-birlestiriciler",
+          "ad": "Flanş Birleştiriciler",
+          "en": "Flange Pullers"
+        },
+        {
+          "slug": "flans-hizalayicilar",
+          "ad": "Flanş Hizalayıcılar",
+          "en": "Flange Alignment Tools"
+        }
+      ]
+    },
+    {
+      "slug": "test-ve-kalibrasyon",
+      "ad": "Test ve Kalibrasyon",
+      "en": "Test & Calibration"
+    },
+    {
+      "slug": "endustriyel-ekipmanlar",
+      "ad": "Endüstriyel Ekipmanlar",
       "en": "Industrial Equipment",
       "alt": [
         {
-          "slug": "flans-aletleri",
-          "ad": "Flanş Ayırma ve Hizalama",
-          "en": "Flange Spreaders & Alignment"
-        },
-        {
-          "slug": "cektirmeler",
+          "slug": "hidrolik-cektirmeler",
           "ad": "Hidrolik Çektirmeler",
           "en": "Hydraulic Pullers"
         },
         {
-          "slug": "somun-kesiciler",
-          "ad": "Somun Kesiciler",
-          "en": "Nut Splitters"
+          "slug": "su-test-pompalari",
+          "ad": "Su Test Pompaları",
+          "en": "Water Test Pumps"
         },
         {
-          "slug": "test-pompalari",
-          "ad": "Hidrostatik Test Pompaları",
-          "en": "Hydrostatic Test Pumps"
+          "slug": "somun-patlatmalar",
+          "ad": "Somun Patlatmalar",
+          "en": "Nut Splitters"
         }
       ]
     }
@@ -243,7 +280,7 @@
     },
     {
       "kod": "RBT-27",
-      "kategori": "elektrikli-tork-anahtarlari",
+      "kategori": "akulu-tork-anahtarlari",
       "ad": "Akülü Tork Anahtarı 36 V",
       "en": "Battery Torque Wrench 36 V",
       "kisa": "Kablosuz saha çalışması için 36 V akü, iki kademeli hız ve otomatik kapanma. Rüzgar türbini ve kule bakımları için hafif çözüm.",
@@ -278,7 +315,7 @@
     },
     {
       "kod": "RTM-125",
-      "kategori": "tork-carpanlari",
+      "kategori": "mekanik-tork-artiricilar",
       "ad": "Tork Çarpanı, Reaksiyon Kollu",
       "en": "Torque Multiplier with Reaction Arm",
       "kisa": "1:125 dişli oranı ile küçük bir manuel tork anahtarından yüksek çıkış torku. Elektrik ve hava olmayan sahalar için.",
@@ -313,7 +350,7 @@
     },
     {
       "kod": "RBT-M48",
-      "kategori": "civata-gerdirme",
+      "kategori": "saplama-gerdirmeler",
       "rozet": "1.500 bar",
       "ad": "Hidrolik Cıvata Gerdirme Aleti",
       "en": "Hydraulic Bolt Tensioner",
@@ -349,7 +386,7 @@
     },
     {
       "kod": "RIS-SET",
-      "kategori": "darbe-lokmalari",
+      "kategori": "havali-agir-lokmalar-ve-daraltici-burclar",
       "ad": "Ağır Hizmet Darbe Lokma Seti, 1½\"",
       "en": "Heavy Duty Impact Socket Set, 1½\"",
       "kisa": "Krom-molibden çelik, fosfat kaplı darbe lokmaları. Hidrolik tork anahtarlarıyla birlikte 46–95 mm aralığında 9 parça.",
@@ -380,11 +417,19 @@
           "DIN 3129"
         ]
       ],
-      "gorsel": "a set of nine heavy-duty impact sockets in graduated sizes, matt black phosphate finish, arranged in a precise row in a fitted foam tray, each socket with crisp hexagon interior"
+      "gorsel": "a set of nine heavy-duty impact sockets in graduated sizes, matt black phosphate finish, arranged in a precise row in a fitted foam tray, each socket with crisp hexagon interior",
+      "secenekler": [
+        "41 mm",
+        "46 mm",
+        "50 mm",
+        "55 mm",
+        "60 mm",
+        "Komple set"
+      ]
     },
     {
       "kod": "RSC-5013",
-      "kategori": "hidrolik-silindirler",
+      "kategori": "hidrolik-krikolar",
       "one_cikan": true,
       "ad": "Tek Etkili Hidrolik Silindir",
       "en": "Single Acting Hydraulic Cylinder",
@@ -420,7 +465,7 @@
     },
     {
       "kod": "RSC-LP100",
-      "kategori": "hidrolik-silindirler",
+      "kategori": "hidrolik-krikolar",
       "rozet": "Kısa boy",
       "ad": "Düşük Yükseklikli Silindir",
       "en": "Low Height Cylinder",
@@ -460,7 +505,7 @@
     },
     {
       "kod": "RSC-DA200",
-      "kategori": "hidrolik-silindirler",
+      "kategori": "hidrolik-krikolar",
       "ad": "Çift Etkili Ağır Hizmet Silindiri",
       "en": "Double Acting Heavy Duty Cylinder",
       "kisa": "Hidrolik geri dönüş, köprü ve bina kaldırma gibi senkron uygulamalar için iki bağlantı portu ve emniyet valfi.",
@@ -499,7 +544,7 @@
     },
     {
       "kod": "RPE-554",
-      "kategori": "hidrolik-pompalar",
+      "kategori": "hidrolik-guc-uniteleri",
       "one_cikan": true,
       "rozet": "Stokta",
       "ad": "Elektrikli Hidrolik Pompa, 4/3 Valfli",
@@ -540,7 +585,7 @@
     },
     {
       "kod": "RPH-392",
-      "kategori": "hidrolik-pompalar",
+      "kategori": "hidrolik-el-pompalari",
       "muadil": [
         "Enerpac P-392"
       ],
@@ -578,7 +623,7 @@
     },
     {
       "kod": "RPA-700",
-      "kategori": "hidrolik-pompalar",
+      "kategori": "hidrolik-el-pompalari",
       "ad": "Havalı Ayak Pompası",
       "en": "Air Driven Foot Pump",
       "kisa": "Atölye hava hattından çalışır, ayakla kontrol edilen basınç ve tahliye. Elleri serbest bırakan tasarım.",
@@ -617,7 +662,7 @@
     },
     {
       "kod": "RHC-7206",
-      "kategori": "hortum-ve-baglanti",
+      "kategori": "hidrolik-aksesuarlar",
       "ad": "Yüksek Basınç Hortumu, Kaplinli",
       "en": "High Pressure Hose with Couplers",
       "kisa": "Termoplastik, 4:1 emniyet katsayılı hidrolik hortum. Bir ucunda dişi kaplin, diğer ucunda erkek kaplin.",
@@ -652,7 +697,7 @@
     },
     {
       "kod": "RGA-63",
-      "kategori": "hortum-ve-baglanti",
+      "kategori": "hidrolik-aksesuarlar",
       "ad": "Manometre Adaptörü ve Gliserinli Manometre",
       "en": "Gauge Adaptor with Glycerin Gauge",
       "kisa": "Sistem basıncını hat üzerinde izlemek için. 63 mm gliserinli manometre, ton ve bar skalalı kadran.",
@@ -722,7 +767,7 @@
     },
     {
       "kod": "RFS-14",
-      "kategori": "flans-aletleri",
+      "kategori": "flans-ayiricilar",
       "one_cikan": true,
       "ad": "Hidrolik Flanş Ayırıcı Kama",
       "en": "Hydraulic Wedge Flange Spreader",
@@ -758,7 +803,7 @@
     },
     {
       "kod": "RFA-10",
-      "kategori": "flans-aletleri",
+      "kategori": "flans-hizalayicilar",
       "ad": "Hidrolik Flanş Hizalama Aleti",
       "en": "Hydraulic Flange Alignment Tool",
       "kisa": "Kaçık flanşları radyal yönde ±10 mm'ye kadar hizalar. Cıvata deliğine geçen kanca ile tek kişi kullanımı.",
@@ -793,7 +838,7 @@
     },
     {
       "kod": "RPL-303",
-      "kategori": "cektirmeler",
+      "kategori": "hidrolik-cektirmeler",
       "ad": "Hidrolik Çektirme, 3 Kollu",
       "en": "Hydraulic Puller, 3 Jaw",
       "kisa": "Rulman, dişli ve kasnak sökümü için kendinden pompalı hidrolik çektirme. Kollar tek hareketle eşit açılır.",
@@ -828,7 +873,7 @@
     },
     {
       "kod": "RNS-50",
-      "kategori": "somun-kesiciler",
+      "kategori": "somun-patlatmalar",
       "ad": "Hidrolik Somun Kesici",
       "en": "Hydraulic Nut Splitter",
       "kisa": "Paslanmış ve sıkışmış somunları cıvataya zarar vermeden keser. Değiştirilebilir sertleştirilmiş keski ucu.",
@@ -863,7 +908,7 @@
     },
     {
       "kod": "RTP-2800",
-      "kategori": "test-pompalari",
+      "kategori": "su-test-pompalari",
       "rozet": "2.800 bar",
       "ad": "Hidrostatik Test Pompası, Havalı",
       "en": "Air Driven Hydrostatic Test Pump",
@@ -939,5 +984,20 @@
       "oran": "16:9",
       "gorsel": "the bolted flange joint of a large steam turbine casing in a power plant, rows of heavy studs and nuts, a torque wrench placed on one nut"
     }
-  ]
+  ],
+  "eski_kategoriler": {
+    "tork-aletleri": "tork-ekipmanlari",
+    "yuksek-basinc-hidrolik": "hidrolik-ekipmanlar",
+    "endustriyel-ekipman": "endustriyel-ekipmanlar",
+    "tork-carpanlari": "mekanik-tork-artiricilar",
+    "civata-gerdirme": "saplama-gerdirmeler",
+    "darbe-lokmalari": "havali-agir-lokmalar-ve-daraltici-burclar",
+    "hidrolik-silindirler": "hidrolik-krikolar",
+    "hidrolik-pompalar": "hidrolik-ekipmanlar",
+    "hortum-ve-baglanti": "hidrolik-aksesuarlar",
+    "flans-aletleri": "flans-bakim-ekipmanlari",
+    "cektirmeler": "hidrolik-cektirmeler",
+    "somun-kesiciler": "somun-patlatmalar",
+    "test-pompalari": "su-test-pompalari"
+  }
 }

@@ -29,8 +29,8 @@ class TorqueCalculatorWidget extends Widget
                 'Mühendislik araçları', "Tork\nhesaplayıcı",
                 'Cıvata ölçüsünü ve kalitesini seçin; gerekli torku, uygun anahtarı ve pompa basıncını hemen görün.'
             ) + [
-                'category' => Controls::text('Anahtar kategorisi (adres)', ['default' => 'tork-aletleri']),
-                'socket_category' => Controls::text('Lokma kategorisi (adres)', ['default' => 'darbe-lokmalari']),
+                'category' => Controls::text('Anahtar kategorisi (adres)', ['default' => 'tork-ekipmanlari']),
+                'socket_category' => Controls::text('Lokma kategorisi (adres)', ['default' => 'havali-agir-lokmalar-ve-daraltici-burclar']),
                 'headroom' => Controls::number('Kapasite payı (%)', ['default' => 90, 'hint' => 'Anahtar, maksimum torkunun bu oranına kadar önerilir.']),
                 'note' => Controls::textarea('Alt not', ['default' => 'Basit yöntem T = K·F·d yaklaşımıdır; VDI 2230 yöntemi diş ve somun altı sürtünmesini ayrı ele alır ve sıkarken oluşan burulmayı gerilmeye katar. Akma değerleri ISO 898-1, ASTM A193/A320 ve SAE J429\'dan alınmıştır. Kritik bağlantılarda cıvata üreticisinin ve proje şartnamesinin değerlerini esas alın.']),
             ]],
@@ -41,9 +41,9 @@ class TorqueCalculatorWidget extends Widget
     {
         $settings = $this->resolved($element, $context);
 
-        $wrenches = ProductCatalog::inCategory($settings['category'] ?? 'tork-aletleri', $context->locale)
+        $wrenches = ProductCatalog::inCategory($settings['category'] ?? 'tork-ekipmanlari', $context->locale)
             ->filter(fn ($p) => $p['tork_maks_nm'])->values();
-        $sockets = ProductCatalog::inCategory($settings['socket_category'] ?? 'darbe-lokmalari', $context->locale)
+        $sockets = ProductCatalog::inCategory($settings['socket_category'] ?? 'havali-agir-lokmalar-ve-daraltici-burclar', $context->locale)
             ->filter(fn ($p) => $p['hex'])->values();
 
         return compact('settings', 'wrenches', 'sockets');

@@ -40,6 +40,7 @@ class WidgetRegistry
         Widgets\BreadcrumbWidget::class,
         Widgets\TemplateWidget::class,
         Widgets\QuoteCartWidget::class,
+        Widgets\Showcase\TopbarWidget::class,
         Widgets\Showcase\HeroGaugeWidget::class,
         Widgets\Showcase\CategoryTilesWidget::class,
         Widgets\Showcase\ProductGridWidget::class,

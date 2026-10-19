@@ -1,6 +1,6 @@
 @php
     $prefix = \App\Support\Urls::prefix($context->locale);
-    $url = fn ($term) => $prefix.'/'.$type->prefix($context->locale).'/'.$term->taxonomy->prefix($context->locale).'/'.$term->t('slug', $context->locale);
+    $url = fn ($term) => $prefix.$term->path($context->locale);
     $limit = (int) ($settings['children'] ?? 5);
 @endphp
 

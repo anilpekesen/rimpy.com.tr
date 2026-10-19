@@ -84,6 +84,10 @@ class ContentItem extends Model
     {
         $locale ??= app()->getLocale();
 
+        if ($this->type->hasFlatUrls()) {
+            return '/'.$this->t('slug', $locale);
+        }
+
         return '/'.trim($this->type->prefix($locale), '/').'/'.$this->t('slug', $locale);
     }
 }

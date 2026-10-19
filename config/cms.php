@@ -119,4 +119,16 @@ return [
         'max_lines' => 50,
         'max_quantity' => 999,
     ],
+
+    /*
+    |---------------------------------------------------------------------------
+    | Kısa adresler
+    |---------------------------------------------------------------------------
+    | Bu türlerin kayıtları ve kategorileri dil önekinden hemen sonra yalnızca
+    | kendi adresiyle açılır: /tr/urunler/kategori/x yerine /tr/x. Eski uzun
+    | adresler kalıcı olarak kısasına yönlendirilir. Aynı adreste bir sayfa
+    | varsa sayfa önceliklidir.
+    */
+
+    'flat_urls' => ['urunler'],
 ];

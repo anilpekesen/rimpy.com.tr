@@ -29,8 +29,8 @@ class CylinderSelectorWidget extends Widget
                 'Mühendislik araçları', "Silindir seçici\nve sistem kurucu",
                 'Yükü, kaldırma noktası sayısını ve gereken stroku girin; silindir, pompa, hortum ve manometre setini birlikte önerelim.'
             ) + [
-                'cylinder_category' => Controls::text('Silindir kategorisi (adres)', ['default' => 'hidrolik-silindirler']),
-                'pump_category' => Controls::text('Pompa kategorisi (adres)', ['default' => 'hidrolik-pompalar']),
+                'cylinder_category' => Controls::text('Silindir kategorisi (adres)', ['default' => 'hidrolik-krikolar']),
+                'pump_category' => Controls::text('Pompa kategorisi (adres)', ['default' => 'hidrolik-ekipmanlar']),
                 'hose_code' => Controls::text('Hortum model kodu', ['default' => 'RHC-7206']),
                 'gauge_code' => Controls::text('Manometre model kodu', ['default' => 'RGA-63']),
                 'note' => Controls::textarea('Alt not', ['default' => 'Öneri, silindirlerin yükü eşit paylaştığı varsayımıyla yapılır. Eksantrik yük, yan kuvvet ve senkron kaldırma gereken işlerde mühendisimizle görüşün.']),
@@ -43,12 +43,12 @@ class CylinderSelectorWidget extends Widget
         $settings = $this->resolved($element, $context);
         $locale = $context->locale;
 
-        $cylinders = ProductCatalog::inCategory($settings['cylinder_category'] ?? 'hidrolik-silindirler', $locale)
+        $cylinders = ProductCatalog::inCategory($settings['cylinder_category'] ?? 'hidrolik-krikolar', $locale)
             ->filter(fn ($p) => $p['kapasite_ton'] && $p['strok_mm'])->values();
-        $pumps = ProductCatalog::inCategory($settings['pump_category'] ?? 'hidrolik-pompalar', $locale)
+        $pumps = ProductCatalog::inCategory($settings['pump_category'] ?? 'hidrolik-ekipmanlar', $locale)
             ->filter(fn ($p) => $p['kullanilabilir_yag_cm3'])->values();
 
-        $accessories = ProductCatalog::inCategory('yuksek-basinc-hidrolik', $locale)->keyBy('code');
+        $accessories = ProductCatalog::inCategory('hidrolik-ekipmanlar', $locale)->keyBy('code');
         $hose = $accessories->get($settings['hose_code'] ?? 'RHC-7206');
         $gauge = $accessories->get($settings['gauge_code'] ?? 'RGA-63');
 

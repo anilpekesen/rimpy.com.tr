@@ -31,7 +31,7 @@ class BoltTensionerWidget extends Widget
                 'Mühendislik araçları', "Cıvata germe\nhesabı",
                 'Cıvatayı, hedef ön yükü ve sıkma boyunu girin; germe aletine uygulanacak yükü ve pompa basıncını yük kaybı dahil hesaplayalım.'
             ) + [
-                'category' => Controls::text('Germe aleti kategorisi (adres)', ['default' => 'civata-gerdirme']),
+                'category' => Controls::text('Germe aleti kategorisi (adres)', ['default' => 'saplama-gerdirmeler']),
                 'request_url' => Controls::text('Uygulama talep formu adresi', ['hint' => 'Boşsa buton gösterilmez. Örn. /tr/civata-germe-talep-formu']),
                 'note' => Controls::textarea('Alt not', ['default' => 'Yük aktarım katsayısı LTF = 1,01 + çap / sıkma boyu (en az 1,10) ile hesaplanır. Sonuç bir yaklaşımdır; kalıcı yükün kesin bilinmesi gereken bağlantılarda germe öncesi ve sonrası cıvata uzaması ölçülmelidir.']),
             ]],
@@ -42,7 +42,7 @@ class BoltTensionerWidget extends Widget
     {
         $settings = $this->resolved($element, $context);
 
-        $tensioners = ProductCatalog::inCategory($settings['category'] ?? 'civata-gerdirme', $context->locale)
+        $tensioners = ProductCatalog::inCategory($settings['category'] ?? 'saplama-gerdirmeler', $context->locale)
             ->filter(fn ($p) => $p['germe_yuk_kn'] && $p['basinc_bar'])
             ->values();
 

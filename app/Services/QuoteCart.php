@@ -14,7 +14,11 @@ use Illuminate\Support\Collection;
  * üyelik, sipariş ya da ödeme yoktur; listedeki ürünler teklif formu
  * gönderildiğinde mesaja eklenir ve sepet boşalır.
  *
- * Oturumda yalnızca kayıt kimliği ve adet saklanır. Başlık, kod ve görsel
+ * Ürünün seçenekleri varsa (lokma ölçüsü gibi) her seçenek ayrı satırdır;
+ * satır anahtarı "kimlik|seçenek" biçimindedir, seçeneksiz üründe yalnızca
+ * kimlik.
+ *
+ * Oturumda yalnızca satır anahtarı ve adet saklanır. Başlık, kod ve görsel
  * her okumada veritabanından gelir; böylece panelde düzeltilen bir ürün adı
  * sepette eski hâliyle kalmaz, yayından kaldırılan ürün de kendiliğinden düşer.
  */
@@ -24,42 +28,65 @@ class QuoteCart
 
     public function __construct(private Session $session) {}
 
-    /** @return array<int, int>  kayıt kimliği => adet */
+    /** @return array<string, int>  satır anahtarı => adet */
     public function raw(): array
     {
         return $this->session->get(self::KEY, []);
     }
 
-    public function add(int $itemId, int $quantity = 1): void
+    public static function key(int $itemId, ?string $option = null): string
+    {
+        return filled($option) ? $itemId.'|'.$option : (string) $itemId;
+    }
+
+    /** @return array{0: int, 1: ?string} */
+    public static function parse(string|int $key): array
+    {
+        [$id, $option] = array_pad(explode('|', (string) $key, 2), 2, null);
+
+        return [(int) $id, $option];
+    }
+
+    public function add(int $itemId, int $quantity = 1, ?string $option = null): void
     {
         $items = $this->raw();
+        $key = self::key($itemId, $option);
 
         // Sınırsız satır, oturum tablosunu şişirmenin kolay bir yolu olurdu.
-        if (! isset($items[$itemId]) && count($items) >= $this->maxLines()) {
+        if (! isset($items[$key]) && count($items) >= $this->maxLines()) {
             return;
         }
 
-        $items[$itemId] = $this->clamp(($items[$itemId] ?? 0) + $quantity);
+        $items[$key] = $this->clamp(($items[$key] ?? 0) + $quantity);
 
         $this->session->put(self::KEY, $items);
     }
 
-    public function set(int $itemId, int $quantity): void
+    public function set(string $key, int $quantity): void
     {
         $items = $this->raw();
 
         if ($quantity < 1) {
-            unset($items[$itemId]);
-        } elseif (isset($items[$itemId])) {
-            $items[$itemId] = $this->clamp($quantity);
+            unset($items[$key]);
+        } elseif (isset($items[$key])) {
+            $items[$key] = $this->clamp($quantity);
         }
 
         $this->session->put(self::KEY, $items);
     }
 
-    public function remove(int $itemId): void
+    public function remove(string $key): void
     {
-        $this->set($itemId, 0);
+        $this->set($key, 0);
+    }
+
+    /** Ürünün panelde tanımlı seçenekleri (her satıra bir tane). */
+    public static function options(ContentItem $item, ?string $locale = null): array
+    {
+        return array_values(array_filter(array_map(
+            fn ($line) => trim(str_replace('|', '/', $line)),
+            preg_split('/\R/u', (string) $item->custom('secenekler', $locale))
+        )));
     }
 
     public function clear(): void
@@ -87,7 +114,7 @@ class QuoteCart
     /**
      * Sepetteki ürünler, çizime hazır hâliyle.
      *
-     * @return Collection<int, array{id: int, title: string, code: ?string, url: string, image: ?string, quantity: int}>
+     * @return Collection<int, array{key: string, id: int, option: ?string, title: string, code: ?string, url: string, image: ?string, quantity: int}>
      */
     public function lines(?string $locale = null): Collection
     {
@@ -99,28 +126,35 @@ class QuoteCart
 
         $items = ContentItem::withTranslations()
             ->with('type', 'featuredImage')
-            ->whereKey(array_keys($raw))
+            ->whereKey(array_map(fn ($key) => self::parse($key)[0], array_keys($raw)))
             ->live()
             ->get()
             ->keyBy('id');
 
         // Artık bulunmayan kayıtlar oturumdan da temizlenir.
-        if ($items->count() !== count($raw)) {
-            $this->session->put(self::KEY, array_intersect_key($raw, $items->all()));
+        $kept = array_filter($raw, fn ($quantity, $key) => $items->has(self::parse($key)[0]), ARRAY_FILTER_USE_BOTH);
+
+        if (count($kept) !== count($raw)) {
+            $this->session->put(self::KEY, $kept);
         }
 
         $prefix = \App\Support\Urls::prefix($locale ?? app()->getLocale());
 
-        return collect($raw)
-            ->filter(fn ($quantity, $id) => $items->has($id))
-            ->map(fn ($quantity, $id) => [
-                'id' => (int) $id,
-                'title' => $items[$id]->t('title', $locale),
-                'code' => $items[$id]->custom('model_kodu', $locale),
-                'url' => $prefix.$items[$id]->path($locale),
-                'image' => $items[$id]->featuredImage?->url('thumb'),
-                'quantity' => (int) $quantity,
-            ])
+        return collect($kept)
+            ->map(function ($quantity, $key) use ($items, $locale, $prefix) {
+                [$id, $option] = self::parse($key);
+
+                return [
+                    'key' => (string) $key,
+                    'id' => $id,
+                    'option' => $option,
+                    'title' => $items[$id]->t('title', $locale),
+                    'code' => $items[$id]->custom('model_kodu', $locale),
+                    'url' => $prefix.$items[$id]->path($locale),
+                    'image' => $items[$id]->featuredImage?->url('thumb'),
+                    'quantity' => (int) $quantity,
+                ];
+            })
             ->values();
     }
 
@@ -134,10 +168,11 @@ class QuoteCart
     {
         return $this->lines($locale)
             ->map(fn (array $line) => sprintf(
-                '%d × %s%s',
+                '%d × %s%s%s',
                 $line['quantity'],
                 $line['code'] ? $line['code'].' — ' : '',
                 $line['title'],
+                $line['option'] ? ' ('.$line['option'].')' : '',
             ))
             ->implode("\n");
     }

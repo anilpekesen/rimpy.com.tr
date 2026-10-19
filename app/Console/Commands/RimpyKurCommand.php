@@ -40,6 +40,8 @@ class RimpyKurCommand extends Command
      */
     private const FIELDS = [
         ['key' => 'model_kodu', 'type' => 'text', 'label' => ['tr' => 'Model kodu', 'en' => 'Model code']],
+        ['key' => 'maddeler', 'type' => 'textarea', 'label' => ['tr' => 'Öne çıkan özellikler (her satıra bir madde; boşsa teknik özelliklerin ilk satırları)', 'en' => 'Key features (one bullet per line; falls back to the first specifications)']],
+        ['key' => 'secenekler', 'type' => 'textarea', 'label' => ['tr' => 'Sepette seçilecek modeller / ölçüler (her satıra bir tane, örn. 41 mm)', 'en' => 'Models / sizes to choose in the quote (one per line, e.g. 41 mm)']],
         ['key' => 'ozellikler', 'type' => 'textarea', 'label' => ['tr' => 'Teknik özellikler (her satıra "Etiket: Değer")', 'en' => 'Specifications (one "Label: Value" per line)']],
         ['key' => 'tork_maks_nm', 'type' => 'number', 'label' => ['tr' => 'Maks. tork (N·m)', 'en' => 'Max. torque (N·m)']],
         ['key' => 'tork_min_nm', 'type' => 'number', 'label' => ['tr' => 'Min. tork (N·m)', 'en' => 'Min. torque (N·m)']],
@@ -58,7 +60,6 @@ class RimpyKurCommand extends Command
         ['key' => 'teslim_suresi', 'type' => 'text', 'label' => ['tr' => 'Tahmini teslim süresi', 'en' => 'Estimated lead time']],
         ['key' => 'muadil', 'type' => 'textarea', 'label' => ['tr' => 'Muadil modeller (her satıra bir tane)', 'en' => 'Equivalent models (one per line)']],
         ['key' => 'baslangic_fiyati', 'type' => 'text', 'label' => ['tr' => 'Başlangıç fiyatı (boşsa gösterilmez)', 'en' => 'Starting price (hidden if empty)']],
-        ['key' => 'rozet', 'type' => 'text', 'label' => ['tr' => 'Rozet (örn. Yeni, Stokta)', 'en' => 'Badge']],
         ['key' => 'belge_test', 'type' => 'url', 'label' => ['tr' => 'Test sertifikası (bağlantı)', 'en' => 'Test certificate (link)']],
         ['key' => 'belge_ce', 'type' => 'url', 'label' => ['tr' => 'CE uygunluk beyanı (bağlantı)', 'en' => 'CE declaration (link)']],
         ['key' => 'belge_kalibrasyon', 'type' => 'url', 'label' => ['tr' => 'Kalibrasyon sertifikası (bağlantı)', 'en' => 'Calibration certificate (link)']],
@@ -100,6 +101,7 @@ class RimpyKurCommand extends Command
         $terms = [];
         $this->components->task('Kategoriler', function () use ($catalogue, &$terms) {
             $terms = $this->categories($catalogue['kategoriler']);
+            $this->retireCategories($catalogue['eski_kategoriler'] ?? [], $terms);
         });
 
         $type = ContentType::where('key', 'urunler')->firstOrFail();
@@ -131,7 +133,7 @@ class RimpyKurCommand extends Command
 
         $this->components->task('Logo ve site ikonu', fn () => $composer->brand());
         $this->components->task('Sahne görselleri', fn () => $composer->scenes());
-        $this->components->task('Menüler', fn () => $composer->menus());
+        $this->components->task('Kurumsal sayfalar ve menüler', fn () => $composer->menus(app(\App\Import\RimpyPages::class)->all()));
         $this->components->task('Mühendislik araçları', fn () => $composer->toolPages());
 
         if (! $this->option('sayfalari-koru')) {
@@ -175,6 +177,21 @@ class RimpyKurCommand extends Command
     {
         Setting::put('general', 'site_name', 'Rimpy');
         Setting::put('contact', 'email', 'info@rimpy.com.tr');
+
+        // Üst çubuk ve alt bilgideki iletişim bilgileri. Panelde
+        // değiştirildiyse dokunulmaz.
+        $contact = Setting::get('contact', []) ?: [];
+        $defaults = [
+            'phone' => '+90 123 456 78 99',
+            'address' => ['tr' => 'İvedik OSB Mah. 5555. Cadde – No: 12/34 Yenimahalle/ANKARA', 'en' => 'İvedik OSB, 5555. Cadde No: 12/34, Yenimahalle, Ankara'],
+            'working_hours' => ['tr' => 'Pzt - Cum: 09:00 - 18:30', 'en' => 'Mon - Fri: 09:00 - 18:30'],
+        ];
+
+        foreach ($defaults as $key => $value) {
+            if (blank(is_array($contact[$key] ?? null) ? array_filter($contact[$key]) : ($contact[$key] ?? null))) {
+                Setting::put('contact', $key, $value);
+            }
+        }
 
         // Açık, ferah zemin; koyu bölümler (açılış, hizmetler, alt bilgi)
         // local.css'teki .tone-dark ile kendi jetonlarını taşır. Tek vurgu
@@ -324,6 +341,8 @@ class RimpyKurCommand extends Command
         $strings = [
             'quote_cart' => ['tr' => 'Teklif sepeti', 'en' => 'Quote cart'],
             'quote_add' => ['tr' => 'Teklif sepetine ekle', 'en' => 'Add to quote'],
+            'quote_choose' => ['tr' => 'Model / ölçü seçin', 'en' => 'Choose model / size'],
+            'description' => ['tr' => 'Ürün detayı', 'en' => 'Details'],
             'quote_added' => ['tr' => 'teklif sepetine eklendi', 'en' => 'added to your quote'],
             'quote_view' => ['tr' => 'Sepeti gör', 'en' => 'View quote'],
             'quote_remove' => ['tr' => 'Kaldır', 'en' => 'Remove'],
@@ -380,6 +399,36 @@ class RimpyKurCommand extends Command
         return $map;
     }
 
+    /**
+     * Menü yeniden düzenlenince kaldırılan kategoriler silinir; eski
+     * adresleri yerini alan kategoriye kalıcı olarak yönlenir.
+     *
+     * @param  array<string, string>  $retired  eski adres => yeni adres
+     * @param  array<string, int>  $terms  yeni adres => terim kimliği
+     */
+    private function retireCategories(array $retired, array $terms): void
+    {
+        foreach ($retired as $old => $new) {
+            if (isset($terms[$old])) {
+                continue;
+            }
+
+            Term::whereHas('translations', fn ($q) => $q->where('locale', 'tr')->where('slug', $old))
+                ->whereHas('taxonomy', fn ($q) => $q->where('key', 'kategori'))
+                ->get()
+                ->each(function (Term $term) {
+                    $term->items()->detach();
+                    $term->delete();
+                });
+
+            if (isset($terms[$new])) {
+                \App\Models\Redirect::updateOrCreate(['from' => '/tr/urunler/kategori/'.$old], [
+                    'to' => '/tr/'.$new, 'status_code' => 301, 'is_active' => true,
+                ]);
+            }
+        }
+    }
+
     private function product(ContentType $type, array $product, array $terms, int $index): ContentItem
     {
         $item = ContentItem::where('content_type_id', $type->id)
@@ -425,6 +474,8 @@ class RimpyKurCommand extends Command
     {
         $custom = [
             'model_kodu' => $product['kod'],
+            'maddeler' => implode("\n", $product['maddeler'] ?? []),
+            'secenekler' => implode("\n", $product['secenekler'] ?? []),
             'ozellikler' => collect($product['ozellikler'])->map(fn ($row) => "{$row[0]}: {$row[1]}")->implode("\n"),
             'rozet' => $product['rozet'] ?? null,
             'muadil' => implode("\n", $product['muadil'] ?? []),

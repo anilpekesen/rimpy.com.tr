@@ -9,15 +9,17 @@
     $specs = ProductSpecs::rows($item, $locale);
     $documents = ProductSpecs::documents($item, $locale);
     $equivalents = ProductSpecs::equivalents($item, $locale);
-    $stock = $item->custom('stok_durumu', $locale);
-    $leadTime = $item->custom('teslim_suresi', $locale);
     $price = $item->custom('baslangic_fiyati', $locale);
-    $badge = $item->custom('rozet', $locale);
+
+    // Bilgi kutusundaki maddeler: panelde yazılanlar, yoksa teknik
+    // özelliklerin ilk satırları.
+    $points = array_values(array_filter(array_map('trim', preg_split('/\R/u', (string) $item->custom('maddeler', $locale)))))
+        ?: array_map(fn ($spec) => $spec['label'].': '.$spec['value'], array_slice($specs, 0, 5));
 
     // Önce alt kategori; ekmek kırıntısı üst kategoriden ona iner.
     $category = $item->terms->sortByDesc(fn ($term) => (int) filled($term->parent_id))->first();
     $parent = $category?->parent_id ? $item->terms->firstWhere('id', $category->parent_id) : null;
-    $termUrl = fn ($term) => $prefix.'/'.$type->prefix($locale).'/'.$term->taxonomy->prefix($locale).'/'.$term->t('slug', $locale);
+    $termUrl = fn ($term) => $prefix.$term->path($locale);
 
     $images = collect([$item->featuredImage])
         ->merge($item->gallery ? \App\Models\Media::whereIn('id', $item->gallery)->get() : [])
@@ -65,9 +67,9 @@
         </nav>
 
         <div class="pd-top">
+            {{-- 2 + 3: büyük görsel ve altında ek fotoğraflar; yükseklik bilgi kutusuyla aynı. --}}
             <div class="pd-gallery" data-pd-gallery>
                 <figure class="pd-stage">
-                    @if ($badge)<span class="pc-badge">{{ $badge }}</span>@endif
                     @if ($images->isNotEmpty())
                         <img src="{{ $images[0]->url('large') }}" alt="{{ $images[0]->altText() ?: $title }}"
                              @if ($srcset = $images[0]->srcset()) srcset="{{ $srcset }}" sizes="(max-width: 960px) 100vw, 640px" @endif
@@ -88,6 +90,7 @@
                 @endif
             </div>
 
+            {{-- 1: başlık, madde madde özellikler ve teklif. --}}
             <div class="pd-info">
                 @if ($code)<span class="pd-code">{{ $code }}</span>@endif
                 <h1 class="pd-title">{{ $title }}</h1>
@@ -96,14 +99,11 @@
                     <p class="pd-lead">{{ $translation->excerpt }}</p>
                 @endif
 
-                @if ($stock || $leadTime)
-                    <ul class="pd-status">
-                        @if ($stock)
-                            <li class="{{ \Illuminate\Support\Str::of($stock)->lower()->contains('stok') ? 'is-ok' : '' }}">
-                                <span>{{ $tr('stock', 'Stok') }}</span><b>{{ $stock }}</b>
-                            </li>
-                        @endif
-                        @if ($leadTime)<li><span>{{ $tr('lead_time', 'Teslim') }}</span><b>{{ $leadTime }}</b></li>@endif
+                @if ($points)
+                    <ul class="pd-points">
+                        @foreach ($points as $point)
+                            <li>{{ $point }}</li>
+                        @endforeach
                     </ul>
                 @endif
 
@@ -119,47 +119,63 @@
                         </a>
                     @endif
                 </div>
-
-                @if ($specs)
-                    <dl class="pd-keyspecs">
-                        @foreach (array_slice($specs, 0, 4) as $spec)
-                            <div><dt>{{ $spec['label'] }}</dt><dd>{{ $spec['value'] }}</dd></div>
-                        @endforeach
-                    </dl>
-                @endif
             </div>
         </div>
 
-        <div @class(['pd-details', 'pd-details--single' => ! $documents && ! $equivalents])>
-            @if ($specs)
-                <section class="pd-block">
-                    <h2 class="pd-h">{{ $tr('specifications', 'Teknik özellikler') }}</h2>
-                    <table class="pd-table">
-                        <tbody>
-                            @if ($code)<tr><th scope="row">{{ $type->field('model_kodu')['label'][$locale] ?? 'Model' }}</th><td>{{ $code }}</td></tr>@endif
-                            @foreach ($specs as $spec)
-                                <tr><th scope="row">{{ $spec['label'] }}</th><td>{{ $spec['value'] }}</td></tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </section>
-            @endif
+        {{-- 4: sekmeler. Betik yoksa tüm bölümler alt alta görünür. --}}
+        @php
+            $tabs = array_filter([
+                'ozellikler' => $specs ? $tr('specifications', 'Teknik özellikler') : null,
+                'detay' => $translation->body ? $tr('description', 'Ürün detayı') : null,
+                'belgeler' => $documents ? $tr('documents', 'Belgeler') : null,
+                'muadil' => $equivalents ? $tr('equivalents', 'Muadil modeller') : null,
+            ]);
+        @endphp
 
-            <aside class="pd-side">
-                @if ($documents)
-                    <section class="pd-block">
-                        <h2 class="pd-h">{{ $tr('documents', 'Belgeler') }}</h2>
+        @if ($tabs)
+            <div class="pd-tabs" data-pd-tabs>
+                <div class="pd-tablist" role="tablist">
+                    @foreach ($tabs as $key => $label)
+                        <button type="button" role="tab" id="pd-tab-{{ $key }}" aria-controls="pd-panel-{{ $key }}"
+                                aria-selected="{{ $loop->first ? 'true' : 'false' }}" @class(['pd-tab', 'is-active' => $loop->first])>{{ $label }}</button>
+                    @endforeach
+                </div>
+
+                @isset ($tabs['ozellikler'])
+                    <section class="pd-panel" role="tabpanel" id="pd-panel-ozellikler" aria-labelledby="pd-tab-ozellikler">
+                        <h2 class="pd-h">{{ $tabs['ozellikler'] }}</h2>
+                        <table class="pd-table">
+                            <tbody>
+                                @if ($code)<tr><th scope="row">{{ $type->field('model_kodu')['label'][$locale] ?? 'Model' }}</th><td>{{ $code }}</td></tr>@endif
+                                @foreach ($specs as $spec)
+                                    <tr><th scope="row">{{ $spec['label'] }}</th><td>{{ $spec['value'] }}</td></tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </section>
+                @endisset
+
+                @isset ($tabs['detay'])
+                    <section class="pd-panel pd-body tx" role="tabpanel" id="pd-panel-detay" aria-labelledby="pd-tab-detay">
+                        <h2 class="pd-h">{{ $tabs['detay'] }}</h2>
+                        {!! \App\Support\Html::sanitize($translation->body) !!}
+                    </section>
+                @endisset
+
+                @isset ($tabs['belgeler'])
+                    <section class="pd-panel" role="tabpanel" id="pd-panel-belgeler" aria-labelledby="pd-tab-belgeler">
+                        <h2 class="pd-h">{{ $tabs['belgeler'] }}</h2>
                         <ul class="pd-docs">
                             @foreach ($documents as $document)
                                 <li><a href="{{ $document['url'] }}" target="_blank" rel="noopener"><x-icon name="download" />{{ $document['label'] }}</a></li>
                             @endforeach
                         </ul>
                     </section>
-                @endif
+                @endisset
 
-                @if ($equivalents)
-                    <section class="pd-block">
-                        <h2 class="pd-h">{{ $tr('equivalents', 'Muadil modeller') }}</h2>
+                @isset ($tabs['muadil'])
+                    <section class="pd-panel" role="tabpanel" id="pd-panel-muadil" aria-labelledby="pd-tab-muadil">
+                        <h2 class="pd-h">{{ $tabs['muadil'] }}</h2>
                         <p class="pd-note">{{ $locale === 'tr'
                             ? 'Bu ürün aşağıdaki modellerin muadili olarak kullanılabilir. Marka adları yalnızca karşılaştırma amaçlıdır.'
                             : 'This product can be used as an equivalent to the models below. Brand names are for comparison only.' }}</p>
@@ -169,12 +185,8 @@
                             @endforeach
                         </ul>
                     </section>
-                @endif
-            </aside>
-        </div>
-
-        @if ($translation->body)
-            <section class="pd-block pd-body tx">{!! \App\Support\Html::sanitize($translation->body) !!}</section>
+                @endisset
+            </div>
         @endif
 
         @if ($related->isNotEmpty())

@@ -266,12 +266,12 @@ document.querySelectorAll('[data-form] form').forEach((form) => {
         });
 
         list.innerHTML = state.lines.map((line) => `
-            <li class="qc-line" data-id="${line.id}">
+            <li class="qc-line" data-id="${esc(line.key)}">
                 <a class="qc-thumb" href="${esc(line.url)}">${line.image ? `<img src="${esc(line.image)}" alt="" loading="lazy">` : ''}</a>
                 <div class="qc-info">
                     <a class="qc-name" href="${esc(line.url)}">${esc(line.title)}</a>
-                    ${line.code ? `<span class="qc-code">${esc(line.code)}</span>` : ''}
-                    <button type="button" class="qc-remove" data-quote-remove="${line.id}">${esc(text.textRemove)}</button>
+                    ${line.code || line.option ? `<span class="qc-code">${esc([line.code, line.option].filter(Boolean).join(' · '))}</span>` : ''}
+                    <button type="button" class="qc-remove" data-quote-remove="${esc(line.key)}">${esc(text.textRemove)}</button>
                 </div>
                 <div class="qc-qty">
                     <button type="button" data-quote-step="-1" aria-label="${esc(text.textLess)}">−</button>
@@ -283,7 +283,9 @@ document.querySelectorAll('[data-form] form').forEach((form) => {
         empty.hidden = state.lines.length > 0;
 
         // Ürün kartlarındaki düğmeler sepette olduklarını göstersin.
-        const inCart = new Map(state.lines.map((line) => [String(line.id), line.quantity]));
+        // Seçenekli üründe aynı ürünün satırları toplanır.
+        const inCart = new Map();
+        state.lines.forEach((line) => inCart.set(String(line.id), (inCart.get(String(line.id)) || 0) + line.quantity));
         document.querySelectorAll('[data-quote-item]').forEach((button) => {
             const quantity = inCart.get(button.dataset.quoteItem);
             button.classList.toggle('is-in', Boolean(quantity));
@@ -384,12 +386,23 @@ document.querySelectorAll('[data-form] form').forEach((form) => {
         if (!form) return;
         event.preventDefault();
 
+        // Seçenekli üründe en az bir seçenek işaretlenmeli.
+        const options = form.querySelector('[data-quote-options]');
+        if (options && !options.querySelector('input:checked')) {
+            options.classList.remove('is-missing');
+            void options.offsetWidth;
+            options.classList.add('is-missing');
+            options.querySelector('input')?.focus();
+            return;
+        }
+
         const button = form.querySelector('button');
         button.disabled = true;
 
         request(form.action, new FormData(form))
             .then((state) => {
                 render(state);
+                options?.querySelectorAll('input:checked').forEach((input) => { input.checked = false; });
                 const title = form.closest('[data-quote-title]')?.dataset.quoteTitle;
                 showToast(title ? `${title} ${text.textAdded}` : text.textAdded);
             })

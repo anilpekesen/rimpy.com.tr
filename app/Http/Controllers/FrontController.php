@@ -58,6 +58,10 @@ class FrontController extends Controller
             return $this->page($page, $locale);
         }
 
+        if (count($segments) === 1 && ($response = $this->flatRoute($segments[0], $locale))) {
+            return $response;
+        }
+
         if ($response = $this->contentRoute($segments, $locale)) {
             return $response;
         }
@@ -101,6 +105,64 @@ class FrontController extends Controller
 
     // ── İçerik ───────────────────────────────────────────────────────────
 
+    /**
+     * Kısa adres: /tr/hidrolik-krikolar ya da /tr/rht-08-kare-... Önce
+     * kategori, sonra kayıt denenir; yalnızca cms.flat_urls'teki türler.
+     */
+    private function flatRoute(string $slug, string $locale)
+    {
+        $types = ContentType::with('taxonomies')->where('is_active', true)
+            ->whereIn('key', config('cms.flat_urls', []))->get();
+
+        foreach ($types as $type) {
+            $term = Term::withTranslations()->with('taxonomy')
+                ->whereIn('taxonomy_id', $type->taxonomies->pluck('id'))
+                ->whereHas('translations', fn ($q) => $q->where('locale', $locale)->where('slug', $slug))
+                ->first();
+
+            if ($term) {
+                return $this->archive($type, $locale, $term);
+            }
+
+            if ($item = $this->findItem($type, $slug, $locale)) {
+                return $this->showItem($item, $type, $locale);
+            }
+        }
+
+        return null;
+    }
+
+    private function findItem(ContentType $type, string $slug, string $locale): ?ContentItem
+    {
+        return ContentItem::withTranslations()
+            ->with('type.taxonomies', 'featuredImage', 'terms.translations', 'terms.taxonomy')
+            ->where('content_type_id', $type->id)
+            ->whereHas('translations', fn ($q) => $q->where('locale', $locale)->where('slug', $slug))
+            ->first();
+    }
+
+    private function showItem(ContentItem $item, ContentType $type, string $locale)
+    {
+        if ($item->status !== 'published' && ! auth()->check()) {
+            return null;
+        }
+
+        $item->timestamps = false;
+        $item->increment('view_count');
+
+        [$previous, $next] = $this->neighbours($item, $type);
+
+        return view($this->templateFor('content', $type), [
+            'item' => $item,
+            'translation' => $item->translation($locale),
+            'type' => $type,
+            'locale' => $locale,
+            'subject' => $item,
+            'previous' => $previous,
+            'next' => $next,
+        ]);
+    }
+
     /** Arşiv, kategori ve detay adreslerini dener. */
     private function contentRoute(array $segments, string $locale)
     {
@@ -131,36 +193,22 @@ class FrontController extends Controller
                     ->first();
 
                 if ($term) {
-                    return $this->archive($type, $locale, $term);
+                    // Kısa adresli türde eski uzun adres kalıcı olarak taşınır.
+                    return $type->hasFlatUrls()
+                        ? redirect(Urls::prefix($locale).$term->path($locale), 301)
+                        : $this->archive($type, $locale, $term);
                 }
             }
         }
 
         // /urunler/bir-urun
-        $item = ContentItem::withTranslations()
-            ->with('type.taxonomies', 'featuredImage', 'terms.translations', 'terms.taxonomy')
-            ->where('content_type_id', $type->id)
-            ->whereHas('translations', fn ($q) => $q->where('locale', $locale)->where('slug', end($segments)))
-            ->first();
+        $item = $this->findItem($type, end($segments), $locale);
 
-        if ($item && ($item->status === 'published' || auth()->check())) {
-            $item->timestamps = false;
-            $item->increment('view_count');
-
-            [$previous, $next] = $this->neighbours($item, $type);
-
-            return view($this->templateFor('content', $type), [
-                'item' => $item,
-                'translation' => $item->translation($locale),
-                'type' => $type,
-                'locale' => $locale,
-                'subject' => $item,
-                'previous' => $previous,
-                'next' => $next,
-            ]);
+        if ($item && $type->hasFlatUrls()) {
+            return redirect(Urls::prefix($locale).$item->path($locale), 301);
         }
 
-        return null;
+        return $item ? $this->showItem($item, $type, $locale) : null;
     }
 
     /**

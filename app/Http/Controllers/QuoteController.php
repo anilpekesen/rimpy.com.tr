@@ -28,13 +28,31 @@ class QuoteController extends Controller
         $data = $request->validate([
             'item' => 'required|integer',
             'quantity' => 'nullable|integer|min:1|max:999',
+            'options' => 'nullable|array|max:50',
+            'options.*' => 'string|max:120',
         ]);
 
         $item = ContentItem::with('type')->find($data['item']);
 
         abort_unless($item && $this->cart->accepts($item), 404);
 
-        $this->cart->add($item->id, $data['quantity'] ?? 1);
+        // Seçenekli üründe en az bir seçenek işaretlenmeli; yalnızca
+        // panelde tanımlı olanlar kabul edilir.
+        $available = QuoteCart::options($item, $this->locale($request));
+
+        if ($available) {
+            $chosen = array_values(array_intersect($available, $data['options'] ?? []));
+
+            if (! $chosen) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['options' => 'Lütfen en az bir seçenek işaretleyin.']);
+            }
+
+            foreach ($chosen as $option) {
+                $this->cart->add($item->id, $data['quantity'] ?? 1, $option);
+            }
+        } else {
+            $this->cart->add($item->id, $data['quantity'] ?? 1);
+        }
 
         return $this->respond($request, 'added');
     }
@@ -64,20 +82,20 @@ class QuoteController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate([
-            'item' => 'required|integer',
+            'item' => ['required', 'regex:/^\d+(\|.{1,120})?$/u'],
             'quantity' => 'required|integer|min:0|max:999',
         ]);
 
-        $this->cart->set($data['item'], $data['quantity']);
+        $this->cart->set((string) $data['item'], $data['quantity']);
 
         return $this->respond($request, 'updated');
     }
 
     public function remove(Request $request)
     {
-        $data = $request->validate(['item' => 'required|integer']);
+        $data = $request->validate(['item' => ['required', 'regex:/^\d+(\|.{1,120})?$/u']]);
 
-        $this->cart->remove($data['item']);
+        $this->cart->remove((string) $data['item']);
 
         return $this->respond($request, 'removed');
     }

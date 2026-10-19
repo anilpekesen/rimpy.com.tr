@@ -50,15 +50,22 @@ class Urls
             return ($target.$translated) ?: ($target ?: '/');
         }
 
-        // İçerik detayı mı? (/urunler/bir-urun)
-        if (count($segments) >= 2) {
-            $item = ContentItem::withTranslations()->with('type')
-                ->whereHas('translations', fn ($q) => $q->where('locale', $from)->where('slug', end($segments)))
-                ->first();
+        // İçerik detayı mı? (/urunler/bir-urun, kısa adreste /bir-urun)
+        $item = ContentItem::withTranslations()->with('type')
+            ->whereHas('translations', fn ($q) => $q->where('locale', $from)->where('slug', end($segments)))
+            ->first();
 
-            if ($item && $item->hasTranslation($to)) {
-                return $target.$item->path($to);
-            }
+        if ($item && $item->hasTranslation($to) && (count($segments) >= 2 || $item->type->hasFlatUrls())) {
+            return $target.$item->path($to);
+        }
+
+        // Kategori mi? (/urunler/kategori/x, kısa adreste /x)
+        $term = \App\Models\Term::withTranslations()->with('taxonomy.contentType')
+            ->whereHas('translations', fn ($q) => $q->where('locale', $from)->where('slug', end($segments)))
+            ->first();
+
+        if ($term && $term->hasTranslation($to) && (count($segments) === 3 || $term->taxonomy->contentType->hasFlatUrls())) {
+            return $target.$term->path($to);
         }
 
         // Arşiv mi? (/urunler)

@@ -33,7 +33,7 @@ class HomeCopy
             ],
             'category_tiles' => [
                 'eyebrow' => '01 — Product groups',
-                'title' => "Three disciplines.\nOne supplier.",
+                'title' => "Every bolting job.\nOne supplier.",
                 'text' => 'From torque tools to 700 bar hydraulic systems, everything your field crew needs in a single quote.',
             ],
             'product_grid' => [

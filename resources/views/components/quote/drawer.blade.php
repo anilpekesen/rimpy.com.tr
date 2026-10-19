@@ -38,14 +38,14 @@
             <div class="qc-body">
                 <ul class="qc-lines" data-quote-lines>
                     @foreach ($state['lines'] as $line)
-                        <li class="qc-line" data-id="{{ $line['id'] }}">
+                        <li class="qc-line" data-id="{{ $line['key'] }}">
                             <a class="qc-thumb" href="{{ $line['url'] }}">
                                 @if ($line['image'])<img src="{{ $line['image'] }}" alt="" loading="lazy">@endif
                             </a>
                             <div class="qc-info">
                                 <a class="qc-name" href="{{ $line['url'] }}">{{ $line['title'] }}</a>
-                                @if ($line['code'])<span class="qc-code">{{ $line['code'] }}</span>@endif
-                                <button type="button" class="qc-remove" data-quote-remove="{{ $line['id'] }}">{{ $tr('quote_remove', 'Kaldır') }}</button>
+                                @if ($line['code'] || $line['option'])<span class="qc-code">{{ implode(' · ', array_filter([$line['code'], $line['option']])) }}</span>@endif
+                                <button type="button" class="qc-remove" data-quote-remove="{{ $line['key'] }}">{{ $tr('quote_remove', 'Kaldır') }}</button>
                             </div>
                             <div class="qc-qty">
                                 <button type="button" data-quote-step="-1" aria-label="{{ $tr('quote_less', 'Azalt') }}">−</button>

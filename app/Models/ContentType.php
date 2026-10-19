@@ -58,6 +58,12 @@ class ContentType extends Model
         return $this->localized($this->route_prefix, $locale) ?? $this->key;
     }
 
+    /** Kayıtları ve kategorileri kısa adresle mi açılıyor (cms.flat_urls)? */
+    public function hasFlatUrls(): bool
+    {
+        return in_array($this->key, config('cms.flat_urls', []), true);
+    }
+
     public function supports(string $feature): bool
     {
         return in_array($feature, $this->supports ?? [], true);

@@ -48,4 +48,17 @@ class Term extends Model
     {
         return $this->belongsToMany(ContentItem::class, 'content_item_term');
     }
+
+    /** Dil öneki olmadan kategori adresi: /urunler/kategori/x ya da kısa adreste /x. */
+    public function path(?string $locale = null): string
+    {
+        $locale ??= app()->getLocale();
+        $type = $this->taxonomy->contentType;
+
+        if ($type->hasFlatUrls()) {
+            return '/'.$this->t('slug', $locale);
+        }
+
+        return '/'.$type->prefix($locale).'/'.$this->taxonomy->prefix($locale).'/'.$this->t('slug', $locale);
+    }
 }

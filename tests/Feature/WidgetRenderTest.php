@@ -40,7 +40,7 @@ class WidgetRenderTest extends TestCase
             'form', 'map', 'html', 'menu', 'language_switcher', 'breadcrumb',
             'template', 'quote_cart',
             // Vitrin ve katalog
-            'hero_gauge', 'category_tiles', 'product_grid', 'steps', 'service_rail',
+            'topbar', 'hero_gauge', 'category_tiles', 'product_grid', 'steps', 'service_rail',
             'stat_band', 'industry_tabs', 'trust_grid', 'cta_band',
             'torque_calculator', 'cylinder_selector',
             'unit_converter', 'flange_sequence', 'spec_writer', 'bolt_tensioner',
